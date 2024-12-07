@@ -1,0 +1,105 @@
+messages:
+  active-raids-header: "&6&lActive Raids:"
+  no-active-raids: "&cThere are no active raids."
+  active-raid: "&e{number}. &b{raidingFaction} &eis raiding &b{defendingFaction} &efor &b{timeSinceStart}m &ewith &b{timeLeft}m &eleft."
+  raid-hover-text: "&eClick to view raid details."
+
+  active-grace-header: "&d&lActive Grace Periods:"
+  no-active-grace: "&cThere are no active grace periods."
+  active-grace: "&e- &b{defendingFaction} &eis on grace (set by &b{raidingFaction}&e) for &b{graceTimeLeft}&e."
+  grace-hover-text: "&eClick to view raid details."
+
+gui:
+  title: "&7{raiding_name}' vs {defending_name} Raid Stats"
+  size: 3
+  raidColour: "&c" #The colour used in GUI for raiding factions
+  defendColour: "&d" #The colour used in GUI for defending factions
+  filler:
+    material: STAINED_GLASS_PANE
+    damage: 7
+    name: "&7"
+  close:
+    slot: 22
+    material: SKULL_ITEM
+    damage: 3
+    url: "afd2400002ad9fbbbd0066941eb5b1a384ab9b0e48a178ee96e4d129a5208654"
+    name: "&cClose"
+  stats:
+    kills:
+      name: "&cTop Kills"
+      material: DIAMOND_SWORD
+      damage: 0
+      slot: 10
+      url: ""
+      lore:
+        - "&7"
+        - "&cRaiding Faction:"
+        - "{raiding_ranks}"
+        - "&7"
+        - "&cDefending Faction:"
+        - "{defending_ranks}"
+      rank: "&c{rank}. {color}{player_name} &8- &c{stat_value}"
+    deaths:
+      material: BONE
+      damage: 0
+      slot: 11
+      url: ""
+      name: "&4Top Deaths"
+      lore:
+        - "&7"
+        - "&4Raiding Faction:"
+        - "{raiding_ranks}"
+        - "&7"
+        - "&4Defending Faction:"
+        - "{defending_ranks}"
+      rank: "&4{rank}. {color}{player_name} &8- &4{stat_value}"
+    blocks_placed:
+      material: OBSIDIAN
+      damage: 0
+      slot: 12
+      url: ""
+      name: "&eTop Blocks Placed"
+      lore:
+        - "&7"
+        - "&eDefending Faction:"
+        - "{defending_ranks}"
+      rank: "&e{rank}. {color}{player_name} &8- &e{stat_value}"
+    blocks_caught:
+      material: SLIME_BLOCK
+      name: "&aTop Shots Caught Stats"
+      damage: 0
+      slot: 14
+      url: ""
+      lore:
+        - "&7"
+        - "&aDefending Faction:"
+        - "{defending_ranks}"
+      rank: "&a{rank}. {color}{player_name} &8- &a{stat_value}"
+    damage_taken:
+      material: DIAMOND_CHESTPLATE
+      name: "&bTop Damage Taken"
+      damage: 0
+      slot: 15
+      url: ""
+      lore:
+        - "&7"
+        - "&bRaiding Faction:"
+        - "{raiding_ranks}"
+        - "&7"
+        - "&bDefending Faction:"
+        - "{defending_ranks}"
+      rank: "&b{rank}. {color}{player_name} &8- &b{stat_value} ({hearts})"
+    damage_given:
+      material: BLAZE_POWDER
+      name: "&6Top Damage Dealt"
+      damage: 0
+      slot: 16
+      url: ""
+      lore:
+        - "&7"
+        - "&6Raiding Faction:"
+        - "{raiding_ranks}"
+        - "&7"
+        - "&6Defending Faction:"
+        - "{defending_ranks}"
+      rank: "&6{rank}. {color}{player_name} &8- &6{stat_value} ({hearts})"
