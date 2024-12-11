@@ -94,15 +94,12 @@ public class RaidGUI extends GUI<Integer> {
     protected Map<Integer, SimpleItem> createDummyItems() {
         Map<Integer, SimpleItem> dummyItems = new HashMap<>();
 
-        // Load the configuration
         FileConfiguration config = plugin.getConfig();
 
-        // Load stats configuration
         for (String statKey : config.getConfigurationSection("gui.stats").getKeys(false)) {
             RaidStatType statType = RaidStatType.valueOf(statKey.toUpperCase());
             int slot = config.getInt("gui.stats." + statKey + ".slot");
 
-            // Stat item configuration
             Material material = Material.valueOf(config.getString("gui.stats." + statKey + ".material", "STONE").toUpperCase());
             byte damage = (byte) config.getInt("gui.stats." + statKey + ".damage", 0);
             String name = config.getString("gui.stats." + statKey + ".name", "&7Unknown Stat");
@@ -110,16 +107,13 @@ public class RaidGUI extends GUI<Integer> {
             String url = config.getString("gui.stats." + statKey + ".url", "");
             String rankFormat = config.getString("gui.stats." + statType.name().toLowerCase() + ".rank");
 
-            // Fetch the top stats for the specific type
             Map<UUID, PlayerStats> topStats = new HashMap<>();
             Map<UUID, PlayerStats> defendingTopStats = raidObject.getTopStats(raidObject.getDefendingFaction(), statType, 7);
 
-            // If the stat type is not for blocks placed or blocks caught, include raiding faction stats
             if (statType != RaidStatType.BLOCKS_PLACED && statType != RaidStatType.BLOCKS_CAUGHT) {
                 topStats = raidObject.getTopStats(raidObject.getRaidingFaction(), statType, 7);
             }
 
-            // Generate lore with raiding and defending faction ranks
             List<String> updatedLore = new ArrayList<>();
             for (String line : lore) {
                 if (line.contains("{raiding_ranks}") && !generateRankLines(topStats, statType, rankFormat, config.getString("gui.raidColour", "&c")).isEmpty()) {
@@ -137,22 +131,17 @@ public class RaidGUI extends GUI<Integer> {
                 if (!line.isEmpty()) updatedLore.add(line);
             }
 
-
-
-            // Create and add stat item with URL
             SimpleItem statItem = SimpleItem.builder()
                     .setName(name)
                     .setMaterial(material)
                     .setDamage(damage)
                     .setLore(updatedLore)
-                    .setUrl(url)  // Setting the URL here
+                    .setUrl(url)
                     .build();
 
-            // Add stat item to dummy items map with the correct slot
             dummyItems.put(slot, statItem);
         }
 
-        // Fill remaining slots with filler items
         for (int i = 0; i < size * 9; i++) {
             dummyItems.putIfAbsent(i, fillerItem);
         }
@@ -165,18 +154,22 @@ public class RaidGUI extends GUI<Integer> {
         int rank = 1;
 
         if (stats.isEmpty()) {
-            return "";  // Return an empty string if there are no stats
+            return "";
         }
 
         for (Map.Entry<UUID, PlayerStats> entryStat : stats.entrySet()) {
             String playerName = Bukkit.getServer().getOfflinePlayer(entryStat.getKey()).getName();
-            int statValue = statType.getValue(entryStat.getValue()); // Get the stat value
+            int statValue = statType.getValue(entryStat.getValue());
 
             // If the stat type is DAMAGE_GIVEN or DAMAGE_TAKEN, convert the value to hearts
             if (statType == RaidStatType.DAMAGE_GIVEN || statType == RaidStatType.DAMAGE_TAKEN) {
-                double hearts = statValue / 2.0; // Convert damage to hearts (1 heart = 2 damage)
-                String heartsString = String.format("%.1f", hearts);  // Format the hearts value to 1 decimal place
-                rankFormat = rankFormat.replace("{hearts}", heartsString);  // Replace {hearts} in the format
+                double hearts = statValue / 2.0;
+                String heartsString = String.format("%.1f", hearts);
+                rankFormat = rankFormat.replace("{hearts}", heartsString);
+                if (statType == RaidStatType.DAMAGE_GIVEN) {
+                    rankFormat = rankFormat.replace("{hits}", String.format("%,d", entryStat.getValue().getHits()));
+                }
+
             }
 
             // Replace placeholders in the rank format

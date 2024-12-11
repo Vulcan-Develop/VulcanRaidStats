@@ -1,6 +1,7 @@
 package net.xantharddev.raidstats.objects;
 
 import com.golfing8.kore.object.Raid;
+import org.bukkit.Location;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -147,20 +148,22 @@ public class RaidObject {
      *
      * @param faction   The faction of the player (raiding or defending).
      * @param playerUUID The UUID of the player.
-     * @param blocks    The number of blocks placed to add (can be negative for decrement).
+     * @param location Location of the block placed
      */
-    public void addBlocksPlaced(String faction, UUID playerUUID, int blocks) {
-        updatePlayerStats(faction, playerUUID, stats -> stats.addBlocksPlaced(blocks));
+    public void addBlocksPlaced(String faction, UUID playerUUID, Location location) {
+        updatePlayerStats(faction, playerUUID, stats -> stats.addBlocksPlaced(location));
     }
 
     /**
      * Adds blocks caught to the specified player in the specified faction.
      *
      * @param faction   The faction of the player (raiding or defending).
-     * @param playerUUID The UUID of the player.
-     * @param blocks    The number of blocks caught to add (can be negative for decrement).
+     * @param location Location of the block placed
      */
-    public void addBlocksCaught(String faction, UUID playerUUID, int blocks) {
-        updatePlayerStats(faction, playerUUID, stats -> stats.addBlocksCaught(blocks));
+    public void addBlocksCaught(String faction, Location location) {
+        Map<UUID, PlayerStats> defendingPlayers = getStatsForFaction(faction);
+
+        // Iterate through each player's stats in the faction
+        defendingPlayers.values().forEach(stats -> stats.addBlocksCaught(location));
     }
 }

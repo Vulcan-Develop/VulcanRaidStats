@@ -17,20 +17,24 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import com.golfing8.kore.feature.RaidClaimFeature.Pair;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class CommandListener implements Listener {
     private final RaidStats plugin;
     private final StatsManager statsManager;
-    private static final List<String> validCommands = Arrays.asList("/f raids", "/raids", "/f raidtimer", "/raidtimer");
-    private static final List<String> validStaffRaidCommands = Arrays.asList("/f raids raids", "/raids raids", "/f raidtimer raids", "/raidtimer raids");
-    private static final List<String> validClearCommands = Arrays.asList("/f raids clear", "/raids clear", "/f raidtimer clear", "/raidtimer clear");
+    private final List<String> validCommands;
+    private final List<String> validStaffRaidCommands;
+    private final List<String> validClearCommands;
 
     public CommandListener(RaidStats plugin, StatsManager statsManager) {
         this.plugin = plugin;
         this.statsManager = statsManager;
+
+        // Load configurable commands from config.yml
+        this.validCommands = plugin.getConfig().getStringList("valid-commands");
+        this.validStaffRaidCommands = plugin.getConfig().getStringList("valid-staff-raid-commands");
+        this.validClearCommands = plugin.getConfig().getStringList("valid-clear-commands");
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

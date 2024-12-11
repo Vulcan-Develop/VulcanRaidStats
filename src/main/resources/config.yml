@@ -1,3 +1,24 @@
+# List of valid commands that should be intercepted -> If it starts with that cmd it will intercept (For ppl without permission)
+valid-commands:
+  - "/f raids"
+  - "/raids"
+  - "/f raidtimer"
+  - "/raidtimer"
+
+# List of valid staff raid-related commands that bypass certain checks (FactionsKore Admin Permission -> "factionskore.admin.raid-claim") - All other commands will send kores help menu.
+valid-staff-raid-commands:
+  - "/f raids raids"
+  - "/raids raids"
+  - "/f raidtimer raids"
+  - "/raidtimer raids"
+
+# List of clear commands for resetting raid data (I will listen to these commands and reset my data to sync with FactionsKores Raid Timers)
+valid-clear-commands:
+  - "/f raids clear"
+  - "/raids clear"
+  - "/f raidtimer clear"
+  - "/raidtimer clear"
+
 messages:
   active-raids-header: "&6&lActive Raids:"
   no-active-raids: "&cThere are no active raids."
@@ -12,8 +33,8 @@ messages:
 gui:
   title: "&7{raiding_name}' vs {defending_name} Raid Stats"
   size: 3
-  raidColour: "&c" #The colour used in GUI for raiding factions
-  defendColour: "&d" #The colour used in GUI for defending factions
+  raidColour: "&c" #The {colour} colour used in GUI for raiding factions
+  defendColour: "&d" #The {colour} colour used in GUI for defending factions
   filler:
     material: STAINED_GLASS_PANE
     damage: 7
@@ -88,7 +109,7 @@ gui:
         - "&7"
         - "&bDefending Faction:"
         - "{defending_ranks}"
-      rank: "&b{rank}. {color}{player_name} &8- &b{stat_value} ({hearts})"
+      rank: "&b{rank}. {color}{player_name} &8- &b{stat_value} ({hits} hits) ({hearts})"
     damage_given:
       material: BLAZE_POWDER
       name: "&6Top Damage Dealt"
@@ -102,4 +123,4 @@ gui:
         - "&7"
         - "&6Defending Faction:"
         - "{defending_ranks}"
-      rank: "&6{rank}. {color}{player_name} &8- &6{stat_value} ({hearts})"
+      rank: "&6{rank}. {color}{player_name} &8- &6{stat_value} ({hits} hits) ({hearts})"

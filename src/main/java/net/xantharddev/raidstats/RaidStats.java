@@ -7,7 +7,8 @@ import net.xantharddev.raidstats.data.DataManager;
 import net.xantharddev.raidstats.gui.GUIListeners;
 import net.xantharddev.raidstats.integration.FactionsKoreRaidTimer;
 import net.xantharddev.raidstats.listener.CommandListener;
-import net.xantharddev.raidstats.listener.RaidListener;
+import net.xantharddev.raidstats.listener.RaidEventListener;
+import net.xantharddev.raidstats.listener.StatsListener;
 import net.xantharddev.raidstats.manager.StatsManager;
 import net.xantharddev.raidstats.objects.Colour;
 import org.bukkit.Bukkit;
@@ -23,7 +24,8 @@ public final class RaidStats extends JavaPlugin {
     public void onEnable() {
         this.saveDefaultConfig();
         StatsManager statsManager = new StatsManager();
-        Bukkit.getPluginManager().registerEvents(new RaidListener(this, statsManager), this);
+        Bukkit.getPluginManager().registerEvents(new StatsListener(this, statsManager), this);
+        Bukkit.getPluginManager().registerEvents(new RaidEventListener(this, statsManager), this);
         Bukkit.getPluginManager().registerEvents(new CommandListener(this, statsManager), this);
         Bukkit.getPluginManager().registerEvents(new GUIListeners(), this);
         this.getCommand("viewraid").setExecutor(new ViewRaidCommand(this, statsManager));

@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.xantharddev.raidstats</groupId>
   <artifactId>RaidStats</artifactId>
-  <version>1.0</version>
+  <version>1.1</version>
   <packaging>jar</packaging>
 
   <name>RaidStats</name>
@@ -49,35 +49,6 @@
 
   <dependencies>
       <dependency>
-          <groupId>org.spigotmc</groupId>
-          <artifactId>spigot</artifactId>
-          <version>1.8.8-R0.1-SNAPSHOT</version>
-          <scope>system</scope>
-          <systemPath>C:/Development/libs/server.jar</systemPath>
-          <exclusions>
-              <exclusion>
-                  <artifactId>bungeecord-chat</artifactId>
-                  <groupId>net.md-5</groupId>
-              </exclusion>
-              <exclusion>
-                  <artifactId>persistence-api</artifactId>
-                  <groupId>javax.persistence</groupId>
-              </exclusion>
-              <exclusion>
-                  <artifactId>junit</artifactId>
-                  <groupId>junit</groupId>
-              </exclusion>
-              <exclusion>
-                  <artifactId>guava</artifactId>
-                  <groupId>com.google.guava</groupId>
-              </exclusion>
-              <exclusion>
-                  <artifactId>gson</artifactId>
-                  <groupId>com.google.code.gson</groupId>
-              </exclusion>
-          </exclusions>
-      </dependency>
-      <dependency>
           <groupId>com.golfing8.kore</groupId>
           <artifactId>FactionsKore</artifactId>
           <version>1.0</version>
@@ -90,6 +61,13 @@
           <version>1.0</version>
           <scope>system</scope>
           <systemPath>C:/Development/libs/Factions.jar</systemPath>
+      </dependency>
+      <dependency>
+          <groupId>com.golfing8.winespigot</groupId>
+          <artifactId>WineSpigot</artifactId>
+          <version>1.0</version>
+          <scope>system</scope>
+          <systemPath>C:/Development/libs/WineSpigot.jar</systemPath>
       </dependency>
   </dependencies>
 </project>

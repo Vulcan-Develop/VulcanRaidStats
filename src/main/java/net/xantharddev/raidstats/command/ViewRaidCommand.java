@@ -36,7 +36,7 @@ public class ViewRaidCommand implements CommandExecutor {
 
         try {
             UUID raidUUID = UUID.fromString(args[0]);
-            RaidObject raid = statsManager.getRaidByUUID(raidUUID); // Assuming a method to fetch a raid by its UUID
+            RaidObject raid = statsManager.getRaidByUUID(raidUUID);
 
             if (raid == null) {
                 player.sendMessage("§cRaid not found for the given UUID.");

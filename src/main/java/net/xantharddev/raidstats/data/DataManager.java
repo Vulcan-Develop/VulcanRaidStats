@@ -2,17 +2,18 @@ package net.xantharddev.raidstats.data;
 
 import net.xantharddev.raidstats.RaidStats;
 import net.xantharddev.raidstats.manager.StatsManager;
+import net.xantharddev.raidstats.objects.BlockLocation;
 import net.xantharddev.raidstats.objects.PlayerStats;
 import net.xantharddev.raidstats.objects.RaidObject;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import java.io.File;
 
@@ -22,61 +23,43 @@ public class DataManager {
     private final RaidStats plugin;
 
     public DataManager(File dataFolder, StatsManager statsManager, RaidStats plugin) {
-        // Ensure the provided dataFolder is a valid directory
+        this.statsManager = statsManager;
+        this.plugin = plugin;
         if (dataFolder == null || !dataFolder.isDirectory()) {
             throw new IllegalArgumentException("The provided dataFolder is invalid or not a directory: " + dataFolder);
         }
 
-        // Initialize the 'data' folder where raid files will be stored
         this.dataFolder = new File(dataFolder, "data");
 
-        // Ensure the 'data' folder exists
         if (!this.dataFolder.exists()) {
-            boolean created = this.dataFolder.mkdirs();  // Create 'data' directory if it doesn't exist
+            boolean created = this.dataFolder.mkdirs();
             if (!created) {
                 throw new RuntimeException("Failed to create 'data' folder at: " + this.dataFolder.getPath());
             }
         }
-
-        // Set the StatsManager for fetching all raids
-        if (statsManager == null) {
-            throw new IllegalArgumentException("StatsManager cannot be null.");
-        }
-        this.statsManager = statsManager;
-
-        // Set the plugin (make sure it's not null)
-        if (plugin == null) {
-            throw new IllegalArgumentException("RaidStats plugin cannot be null.");
-        }
-        this.plugin = plugin;
     }
 
     public void saveAllRaids() {
-        // Clear all files in the dataFolder
         File[] files = dataFolder.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.isFile()) {
-                    file.delete();  // Delete the file if it is a file (not a directory)
+                    file.delete();
                 }
             }
         }
 
-        // Iterate through all the raids in the statsManager
         for (RaidObject raidObject : statsManager.getAllRaids()) {
             String raidId = raidObject.getId().toString();
             File raidFile = new File(dataFolder, raidId + ".yml");
 
-            // Prepare the data to be saved
             Map<String, Object> raidData = new HashMap<>();
             raidData.put("raidingID", raidObject.getRaidingFaction());
             raidData.put("defendingID", raidObject.getDefendingFaction());
 
-            // Save the player stats for both factions
             raidData.put("raidingFaction", saveFactionStats(raidObject.getStatsForFaction(raidObject.getRaidingFaction())));
             raidData.put("defendingFaction", saveFactionStats(raidObject.getStatsForFaction(raidObject.getDefendingFaction())));
 
-            // Save the raid data to the file
             saveRaidDataToFile(raidFile, raidData);
         }
     }
@@ -89,16 +72,23 @@ public class DataManager {
             UUID playerUUID = entry.getKey();
             PlayerStats stats = entry.getValue();
 
-            // Store the player's stats
             Map<String, Object> playerData = new HashMap<>();
             playerData.put("kills", stats.getKills());
             playerData.put("deaths", stats.getDeaths());
             playerData.put("blocksCaught", stats.getBlocksCaught());
-            playerData.put("blocksPlaced", stats.getBlocksPlaced());
+            playerData.put("hits", stats.getHits());
+
+            Set<BlockLocation> placed = stats.getBlocksPlaced();
+            List<String> placedLocations = new ArrayList<>();
+            for (BlockLocation blockLocation : placed) {
+                placedLocations.add(blockLocation.getWorldName() + ";" + blockLocation.getX() + ";" + blockLocation.getY() + ";" + blockLocation.getZ());
+            }
+            playerData.put("blocksPlaced", placedLocations);
+
             playerData.put("damageDealt", stats.getDamageDealt());
             playerData.put("damageTaken", stats.getDamageTaken());
 
-            factionData.put(playerUUID.toString(), playerData);  // Use the player UUID as the key
+            factionData.put(playerUUID.toString(), playerData);
         }
 
         return factionData;
@@ -117,7 +107,6 @@ public class DataManager {
     }
 
     public void loadAllRaids() {
-        // List all files in the data folder with .yml extension
         File[] files = dataFolder.listFiles((dir, name) -> name.endsWith(".yml"));
 
         if (files != null) {
@@ -141,7 +130,6 @@ public class DataManager {
 
                     UUID uuid = UUID.fromString(raidId);
 
-                    // Check if raid exists in active raids
                     plugin.getRaidTimer().getActiveRaids().stream()
                             .filter(raid -> raid.getRaided().equals(defendingFaction) && raid.getFaction().equals(raidingFaction))
                             .findAny()
@@ -150,7 +138,6 @@ public class DataManager {
                                 statsManager.addRaid(new RaidObject(uuid, raidingFaction, defendingFaction, -1, raid, factionStats));
                             });
 
-                    // Check for grace periods and set purge time if applicable
                     plugin.getRaidTimer().getGracePeriods().entrySet().stream()
                             .filter(entry -> entry.getKey().equals(defendingFaction) && entry.getValue().getA().equals(raidingFaction))
                             .findAny()
@@ -189,7 +176,6 @@ public class DataManager {
 
     private Map<String, Object> loadRaidDataFromFile(File raidFile) {
         try {
-            // Load the YAML file and return the data as a map
             FileConfiguration config = YamlConfiguration.loadConfiguration(raidFile);
             Map<String, Object> raidData = new HashMap<>();
 
@@ -213,7 +199,6 @@ public class DataManager {
         if (factionData instanceof Map) {
             Map<String, Object> factionDataMap = (Map<String, Object>) factionData;
 
-            // Iterate through each entry in the map
             for (Map.Entry<String, Object> entry : factionDataMap.entrySet()) {
                 String playerUUIDString = entry.getKey();
                 Object playerData = entry.getValue();
@@ -226,15 +211,31 @@ public class DataManager {
                     int kills = statsSection.getInt("kills");
                     int deaths = statsSection.getInt("deaths");
                     int blocksCaught = statsSection.getInt("blocksCaught");
-                    int blocksPlaced = statsSection.getInt("blocksPlaced");
+                    int hits = statsSection.getInt("hits");
+
+                    // Deserialize blocksPlaced from List<String> to Set<BlockLocation>
+                    List<String> placedLocations = (List<String>) statsSection.getList("blocksPlaced");
+                    Set<BlockLocation> blocksPlaced = new HashSet<>();
+                    for (String locationString : placedLocations) {
+                        String[] parts = locationString.split(";");
+                        if (parts.length == 4) {
+                            String worldName = parts[0];
+                            int x = Integer.parseInt(parts[1]);
+                            int y = Integer.parseInt(parts[2]);
+                            int z = Integer.parseInt(parts[3]);
+                            World world = Bukkit.getWorld(worldName);  // Assuming the world is already loaded
+                            if (world != null) {
+                                blocksPlaced.add(new BlockLocation(new Location(world, x, y, z)));
+                            }
+                        }
+                    }
+
                     double damageDealt = statsSection.getDouble("damageDealt");
                     double damageTaken = statsSection.getDouble("damageTaken");
 
-                    // Create PlayerStats object
                     UUID playerUUID = UUID.fromString(playerUUIDString);
-                    PlayerStats stats = new PlayerStats(kills, deaths, blocksCaught, blocksPlaced, damageDealt, damageTaken);
+                    PlayerStats stats = new PlayerStats(kills, deaths, blocksCaught, blocksPlaced, damageDealt, damageTaken, hits);
 
-                    // Put the stats into the playerStatsMap with the player's UUID as the key
                     playerStatsMap.put(playerUUID, stats);
                 }
             }
