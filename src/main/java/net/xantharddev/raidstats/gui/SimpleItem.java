@@ -2,7 +2,6 @@ package net.xantharddev.raidstats.gui;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import net.xantharddev.raidstats.RaidStats;
 import net.xantharddev.raidstats.objects.Colour;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

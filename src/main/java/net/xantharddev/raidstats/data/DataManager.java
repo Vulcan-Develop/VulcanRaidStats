@@ -2,12 +2,9 @@ package net.xantharddev.raidstats.data;
 
 import net.xantharddev.raidstats.RaidStats;
 import net.xantharddev.raidstats.manager.StatsManager;
-import net.xantharddev.raidstats.objects.BlockLocation;
 import net.xantharddev.raidstats.objects.PlayerStats;
 import net.xantharddev.raidstats.objects.RaidObject;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -75,15 +72,9 @@ public class DataManager {
             Map<String, Object> playerData = new HashMap<>();
             playerData.put("kills", stats.getKills());
             playerData.put("deaths", stats.getDeaths());
-            playerData.put("blocksCaught", stats.getBlocksCaught());
-            playerData.put("hits", stats.getHits());
-
-            Set<BlockLocation> placed = stats.getBlocksPlaced();
-            List<String> placedLocations = new ArrayList<>();
-            for (BlockLocation blockLocation : placed) {
-                placedLocations.add(blockLocation.getWorldName() + ";" + blockLocation.getX() + ";" + blockLocation.getY() + ";" + blockLocation.getZ());
-            }
-            playerData.put("blocksPlaced", placedLocations);
+            playerData.put("hitsGiven", stats.getHitsDealt());
+            playerData.put("hitsTaken", stats.getHitsTaken());
+            playerData.put("blocksPlaced", stats.getBlocksPlaced());
 
             playerData.put("damageDealt", stats.getDamageDealt());
             playerData.put("damageTaken", stats.getDamageTaken());
@@ -210,31 +201,15 @@ public class DataManager {
                     // Retrieve individual stats from the MemorySection
                     int kills = statsSection.getInt("kills");
                     int deaths = statsSection.getInt("deaths");
-                    int blocksCaught = statsSection.getInt("blocksCaught");
-                    int hits = statsSection.getInt("hits");
-
-                    // Deserialize blocksPlaced from List<String> to Set<BlockLocation>
-                    List<String> placedLocations = (List<String>) statsSection.getList("blocksPlaced");
-                    Set<BlockLocation> blocksPlaced = new HashSet<>();
-                    for (String locationString : placedLocations) {
-                        String[] parts = locationString.split(";");
-                        if (parts.length == 4) {
-                            String worldName = parts[0];
-                            int x = Integer.parseInt(parts[1]);
-                            int y = Integer.parseInt(parts[2]);
-                            int z = Integer.parseInt(parts[3]);
-                            World world = Bukkit.getWorld(worldName);  // Assuming the world is already loaded
-                            if (world != null) {
-                                blocksPlaced.add(new BlockLocation(new Location(world, x, y, z)));
-                            }
-                        }
-                    }
+                    int hitsGiven = statsSection.getInt("hitsGiven");
+                    int hitsTaken = statsSection.getInt("hitsTaken");
+                    int blocksPlaced = statsSection.getInt("blocksPlaced");
 
                     double damageDealt = statsSection.getDouble("damageDealt");
                     double damageTaken = statsSection.getDouble("damageTaken");
 
                     UUID playerUUID = UUID.fromString(playerUUIDString);
-                    PlayerStats stats = new PlayerStats(kills, deaths, blocksCaught, blocksPlaced, damageDealt, damageTaken, hits);
+                    PlayerStats stats = new PlayerStats(kills, deaths, blocksPlaced, damageDealt, damageTaken, hitsGiven, hitsTaken);
 
                     playerStatsMap.put(playerUUID, stats);
                 }

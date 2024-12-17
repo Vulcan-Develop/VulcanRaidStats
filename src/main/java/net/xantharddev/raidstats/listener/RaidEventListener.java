@@ -24,7 +24,7 @@ public class RaidEventListener implements Listener {
         // Running async to avoid blocking the main thread
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             String raidingFactionId = event.getFactionRaiding();
-            String defendingFactionId = event.getFactionRaided();;
+            String defendingFactionId = event.getFactionRaided();
 
             // Initialize stats for both factions asynchronously
             statsManager.addRaid(new RaidObject(raidingFactionId, defendingFactionId, event.getRaid()));
@@ -33,13 +33,10 @@ public class RaidEventListener implements Listener {
 
     @EventHandler
     public void onRaidEnd(RaidEndEvent event) {
-        // Schedule the task to run after 5 ticks (0.25 seconds = 5 ticks in Minecraft)
         Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
-
-            // Grab the grace period in minutes
             int graceMinutes = plugin.getRaidTimer().getGrace(event.getFactionRaided());
 
-            RaidObject raidObject = statsManager.getRaidByFactionIds(event.getFactionRaiding(), event.getFactionRaided());
+            RaidObject raidObject = statsManager.getRaidDefendingByFacID(event.getFactionRaided());
             if (graceMinutes <= 0) {
                 callRaidEvent(raidObject);
                 statsManager.removeRaid(event.getFactionRaiding(), event.getFactionRaided());
@@ -59,8 +56,8 @@ public class RaidEventListener implements Listener {
             long graceEndDelayTicks = (graceValueMillis / 50L); // Convert milliseconds to ticks (1 tick = 50ms)
 
             Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
-                statsManager.removeRaid(event.getFactionRaiding(), event.getFactionRaided());
                 callRaidEvent(raidObject);
+                statsManager.removeRaid(event.getFactionRaiding(), event.getFactionRaided());
             }, graceEndDelayTicks);
 
         }, 5L); // 5 ticks delay

@@ -16,13 +16,7 @@ public enum RaidStatType {
     BLOCKS_PLACED {
         @Override
         public int getValue(PlayerStats stats) {
-            return stats.getBlocksPlacedAmount();
-        }
-    },
-    BLOCKS_CAUGHT {
-        @Override
-        public int getValue(PlayerStats stats) {
-            return stats.getBlocksCaught();
+            return stats.getBlocksPlaced();
         }
     },
     DAMAGE_TAKEN {
@@ -35,6 +29,18 @@ public enum RaidStatType {
         @Override
         public int getValue(PlayerStats stats) {
             return (int) stats.getDamageDealt();
+        }
+    },
+    HITS_DEALT {
+        @Override
+        public int getValue(PlayerStats stats) {
+            return stats.getHitsDealt();
+        }
+    },
+    HITS_TAKEN {
+        @Override
+        public int getValue(PlayerStats stats) {
+            return stats.getHitsTaken();
         }
     };
 

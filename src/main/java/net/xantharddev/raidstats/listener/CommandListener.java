@@ -10,6 +10,7 @@ import net.xantharddev.raidstats.RaidStats;
 import net.xantharddev.raidstats.manager.StatsManager;
 import net.xantharddev.raidstats.objects.Colour;
 import net.xantharddev.raidstats.objects.RaidObject;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -49,7 +50,7 @@ public class CommandListener implements Listener {
 
         // Handle clear command (permission check is required)
         if (isClearCommand(command) && hasRaidClaimPermission) {
-            statsManager.clearAllRaids();
+            Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, statsManager::clearAllRaids, 10L);
             return;
         }
 
@@ -97,9 +98,12 @@ public class CommandListener implements Listener {
                 if (!FPlayers.getInstance().getByPlayer(player).getFactionId().equals(raidingID) && !player.hasPermission("factionskore.admin.raid-claim")) continue;
             }
 
+
             activeRaids = true;
             String raidingFaction = getFactionTag(raid.getRaidingFaction());
             String defendingFaction = getFactionTag(raid.getDefendingFaction());
+
+            System.out.println("RAIDING: " + raidingFaction + " DEFENDING: " + defendingFaction);
 
             String message = plugin.getConfig().getString("messages.active-raid")
                     .replace("{number}", String.valueOf(number))

@@ -23,6 +23,11 @@ public class BlockLocation {
         return x == that.x && y == that.y && z == that.z && Objects.equals(worldName, that.worldName);
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(worldName, x, y, z);
+    }
+
     public String getWorldName() {
         return worldName;
     }
@@ -40,7 +45,12 @@ public class BlockLocation {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(worldName, x, y, z);
+    public String toString() {
+        return "BlockLocation{" +
+                "worldName='" + worldName + '\'' +
+                ", x=" + x +
+                ", y=" + y +
+                ", z=" + z +
+                '}';
     }
 }

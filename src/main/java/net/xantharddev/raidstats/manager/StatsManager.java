@@ -1,14 +1,21 @@
 package net.xantharddev.raidstats.manager;
 
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.Faction;
+import net.xantharddev.raidstats.RaidStats;
 import net.xantharddev.raidstats.objects.RaidObject;
+import org.bukkit.Location;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class StatsManager {
+    private final RaidStats plugin;
     private final List<RaidObject> raids;
 
-    public StatsManager() {
+    public StatsManager(RaidStats plugin) {
+        this.plugin = plugin;
         this.raids = new ArrayList<>();
     }
 
@@ -39,21 +46,24 @@ public class StatsManager {
      */
     public RaidObject getRaidDefendingByFacID(String factionId) {
         return raids.stream()
-                .filter(raid -> raid.getDefendingFaction().equals(factionId))
+                .filter(raid -> isDefendingFaction(raid, factionId))
                 .findFirst()
                 .orElse(null);
     }
 
-    /**
-     * Retrieves all raids involving a specific faction as either raiding or defending.
-     *
-     * @param factionId The ID of the faction.
-     * @return A list of RaidObject objects that involve the specified faction.
-     */
-    public List<RaidObject> getRaidsByFacID(String factionId) {
-        return raids.stream()
-                .filter(raid -> raid.getRaidingFaction().equals(factionId) || raid.getDefendingFaction().equals(factionId))
-                .collect(Collectors.toList());
+    public boolean doesFactionOwnRaidingOutpost(String factionId) {
+        if (plugin.getRaidingOutpost() == null || plugin.getRaidingOutpost().getOutpost() == null || plugin.getRaidingOutpost().getOutpost().getOwner() == null) return false;
+        return plugin.getRaidingOutpost().getOutpost().getOwner().equals(factionId);
+    }
+
+    public boolean isLocInRPost(Location loc) {
+        if (plugin.getRaidingOutpost() == null || plugin.getRaidingOutpost().getOutpost() == null || plugin.getRaidingOutpost().getOutpost().getOwner() == null) return false;
+        Faction fac = Board.getInstance().getFactionAt(new FLocation(loc));
+        return fac != null && fac.getTag().equals("RaidOutpost");
+    }
+
+    private boolean isDefendingFaction(RaidObject raid, String factionId) {
+        return raid.getDefendingFaction().equals(factionId) || doesFactionOwnRaidingOutpost(factionId);
     }
 
     /**
@@ -63,12 +73,11 @@ public class StatsManager {
      * @param faction2 The ID of the second faction (either raiding or defending).
      * @return The corresponding RaidObject, or null if not found.
      */
-    public RaidObject getRaidByFactionIds(String faction1, String faction2) {
+    public List<RaidObject> getRaidsByFactionIds(String faction1, String faction2) {
         return raids.stream()
-                .filter(raid -> (raid.getRaidingFaction().equals(faction1) && raid.getDefendingFaction().equals(faction2)) ||
-                        (raid.getRaidingFaction().equals(faction2) && raid.getDefendingFaction().equals(faction1)))
-                .findFirst()
-                .orElse(null);
+                .filter(raid -> (raid.getRaidingFaction().equals(faction1) && isDefendingFaction(raid, faction2)) ||
+                        (raid.getRaidingFaction().equals(faction2) && isDefendingFaction(raid, faction1)))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -79,7 +88,7 @@ public class StatsManager {
      */
     public void removeRaid(String raidingFaction, String defendingFaction) {
         raids.removeIf(raid -> raid.getRaidingFaction().equals(raidingFaction) &&
-                raid.getDefendingFaction().equals(defendingFaction));
+                isDefendingFaction(raid, defendingFaction));
     }
 
     /**

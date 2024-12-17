@@ -32,7 +32,7 @@ messages:
 
 gui:
   title: "&7{raiding_name}' vs {defending_name} Raid Stats"
-  size: 3
+  size: 5
   raidColour: "&c" #The {colour} colour used in GUI for raiding factions
   defendColour: "&d" #The {colour} colour used in GUI for defending factions
   filler:
@@ -40,17 +40,37 @@ gui:
     damage: 7
     name: "&7"
   close:
-    slot: 22
+    slot: 40
     material: SKULL_ITEM
     damage: 3
     url: "afd2400002ad9fbbbd0066941eb5b1a384ab9b0e48a178ee96e4d129a5208654"
     name: "&cClose"
   stats:
+    overall:
+      material: TNT
+      name: "&aTop Overall Stats"
+      damage: 0
+      slot: 13
+      url: ""
+      lore:
+        - "&7"
+        - "&5Defending Faction:"
+        - "&dKills: &7{defending_kills}"
+        - "&dDeaths: &7{defending_deaths}"
+        - "&dBlocks Placed: &7{defending_blocks_placed}"
+        - "&dDamage Dealt: &7{defending_damage_dealt} ({defending_damage_dealt_hits} hits) ({defending_damage_dealt_hearts} ❤)"
+        - "&dDamage Taken: &7{defending_damage_taken} ({defending_damage_taken_hits} hits) ({defending_damage_taken_hearts} ❤)"
+        - "&7"
+        - "&4Raiding Faction:"
+        - "&cKills: &7{attacking_kills}"
+        - "&cDeaths: &7{attacking_deaths}"
+        - "&cDamage Dealt: &7{attacking_damage_dealt} ({attacking_damage_dealt_hits} hits) ({attacking_damage_dealt_hearts} ❤)"
+        - "&cDamage Taken: &7{attacking_damage_taken} ({attacking_damage_taken_hits} hits) ({attacking_damage_taken_hearts} ❤)"
     kills:
       name: "&cTop Kills"
       material: DIAMOND_SWORD
       damage: 0
-      slot: 10
+      slot: 12
       url: ""
       lore:
         - "&7"
@@ -63,7 +83,7 @@ gui:
     deaths:
       material: BONE
       damage: 0
-      slot: 11
+      slot: 21
       url: ""
       name: "&4Top Deaths"
       lore:
@@ -77,7 +97,7 @@ gui:
     blocks_placed:
       material: OBSIDIAN
       damage: 0
-      slot: 12
+      slot: 22
       url: ""
       name: "&eTop Blocks Placed"
       lore:
@@ -85,22 +105,11 @@ gui:
         - "&eDefending Faction:"
         - "{defending_ranks}"
       rank: "&e{rank}. {color}{player_name} &8- &e{stat_value}"
-    blocks_caught:
-      material: SLIME_BLOCK
-      name: "&aTop Shots Caught Stats"
-      damage: 0
-      slot: 14
-      url: ""
-      lore:
-        - "&7"
-        - "&aDefending Faction:"
-        - "{defending_ranks}"
-      rank: "&a{rank}. {color}{player_name} &8- &a{stat_value}"
     damage_taken:
       material: DIAMOND_CHESTPLATE
       name: "&bTop Damage Taken"
       damage: 0
-      slot: 15
+      slot: 23
       url: ""
       lore:
         - "&7"
@@ -109,12 +118,12 @@ gui:
         - "&7"
         - "&bDefending Faction:"
         - "{defending_ranks}"
-      rank: "&b{rank}. {color}{player_name} &8- &b{stat_value} ({hits} hits) ({hearts})"
+      rank: "&b{rank}. {color}{player_name} &8- &b{stat_value} ({hits} hits) ({hearts} ❤)"
     damage_given:
       material: BLAZE_POWDER
       name: "&6Top Damage Dealt"
       damage: 0
-      slot: 16
+      slot: 14
       url: ""
       lore:
         - "&7"
@@ -123,4 +132,4 @@ gui:
         - "&7"
         - "&6Defending Faction:"
         - "{defending_ranks}"
-      rank: "&6{rank}. {color}{player_name} &8- &6{stat_value} ({hits} hits) ({hearts})"
+      rank: "&6{rank}. {color}{player_name} &8- &6{stat_value} ({hits} hits) ({hearts} ❤)"

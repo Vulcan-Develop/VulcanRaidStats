@@ -2,6 +2,7 @@ package net.xantharddev.raidstats;
 
 import com.golfing8.kore.FactionsKore;
 import com.golfing8.kore.feature.RaidClaimFeature;
+import com.golfing8.kore.feature.RaidingOutpostFeature;
 import net.xantharddev.raidstats.command.ViewRaidCommand;
 import net.xantharddev.raidstats.data.DataManager;
 import net.xantharddev.raidstats.gui.GUIListeners;
@@ -15,15 +16,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class RaidStats extends JavaPlugin {
-    private FactionsKoreRaidTimer raidTimer;
     private DataManager dataManager;
+    private FactionsKoreRaidTimer raidTimer;
+    private RaidingOutpostFeature raidingOutpost;
 
+    public RaidingOutpostFeature getRaidingOutpost() {return raidingOutpost;}
     public FactionsKoreRaidTimer getRaidTimer() {return raidTimer;}
 
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
-        StatsManager statsManager = new StatsManager();
+        StatsManager statsManager = new StatsManager(this);
         Bukkit.getPluginManager().registerEvents(new StatsListener(this, statsManager), this);
         Bukkit.getPluginManager().registerEvents(new RaidEventListener(this, statsManager), this);
         Bukkit.getPluginManager().registerEvents(new CommandListener(this, statsManager), this);
@@ -35,11 +38,13 @@ public final class RaidStats extends JavaPlugin {
 
     private void setupRaidTimer(StatsManager statsManager) {
         getServer().getScheduler().runTaskLater(this, () -> {
-            RaidClaimFeature feature = null;
+            RaidClaimFeature outpost = null;
+            raidingOutpost = null;
             if (getServer().getPluginManager().getPlugin("FactionsKore") != null) {
-                feature = FactionsKore.get().getFeature(RaidClaimFeature.class);
+                raidingOutpost = FactionsKore.get().getFeature(RaidingOutpostFeature.class);
+                outpost = FactionsKore.get().getFeature(RaidClaimFeature.class);
             }
-            raidTimer = new FactionsKoreRaidTimer(feature);
+            raidTimer = new FactionsKoreRaidTimer(outpost);
             dataManager = new DataManager(getDataFolder(), statsManager, this);
             dataManager.loadAllRaids();
         }, 20L);

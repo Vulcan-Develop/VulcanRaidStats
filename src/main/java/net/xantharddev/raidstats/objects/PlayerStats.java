@@ -1,32 +1,26 @@
 package net.xantharddev.raidstats.objects;
 
-import org.bukkit.Location;
-
-import java.util.HashSet;
-import java.util.Set;
-
 public class PlayerStats {
     private int kills;
     private int deaths;
     private double damageDealt;
-    private int hits;
+    private int hitsDealt;
+    private int hitsTaken;
     private double damageTaken;
-    private Set<BlockLocation> blocksPlaced = new HashSet<>();
-    private int blocksCaught;
+    private int blocksPlaced;
 
-    public PlayerStats(int kills, int deaths, int blocksCaught, Set<BlockLocation> blocksPlaced, double damageDealt, double damageTaken, int hits) {
-        this.blocksCaught = blocksCaught;
+    public PlayerStats(int kills, int deaths, int blocksPlaced, double damageDealt, double damageTaken, int hitsDealt, int hitsTaken) {
         this.blocksPlaced = blocksPlaced;
         this.damageDealt = damageDealt;
         this.damageTaken = damageTaken;
         this.deaths = deaths;
         this.kills = kills;
-        this.hits = hits;
+        this.hitsDealt = hitsDealt;
+        this.hitsTaken = hitsTaken;
     }
 
     public PlayerStats() {}
 
-    // Getters and setters for each stat
     public int getKills() {
         return kills;
     }
@@ -43,47 +37,83 @@ public class PlayerStats {
         this.deaths += deaths;
     }
 
-    public double getDamageDealt() {
-        return damageDealt;
+    public int getDamageDealt() {
+        return (int) damageDealt;
     }
 
     public void addDamageGiven(double damage) {
         this.damageDealt += damage;
-        this.hits++;
+        this.hitsDealt++;
     }
 
-    public double getDamageTaken() {
-        return damageTaken;
+    public int getDamageTaken() {
+        return (int) damageTaken;
     }
 
     public void addDamageTaken(double damage) {
         this.damageTaken += damage;
-        this.hits++;
+        this.hitsTaken++;
     }
 
-    public int getHits() {
-        return hits;
+    public int getHitsDealt() {
+        return hitsDealt;
     }
 
-    public int getBlocksPlacedAmount() {
-        return blocksPlaced.size();
+    public int getHitsTaken() {
+        return hitsTaken;
     }
 
-    public Set<BlockLocation> getBlocksPlaced() {
+    public int getBlocksPlaced() {
         return blocksPlaced;
     }
 
-    public void addBlocksPlaced(Location location) {
-        this.blocksPlaced.add(new BlockLocation(location));
+    public void addBlocksPlaced() {
+        this.blocksPlaced++;
     }
 
-    public int getBlocksCaught() {
-        return blocksCaught;
-    }
+    /*
+    public boolean addBlocksCaught(List<Location> locations, Set<BlockLocation> blocksBlown) {
+        boolean found = false;
+        System.out.println(" ");
+        System.out.println("----- START -----");
 
-    public void addBlocksCaught(Location location) {
-        if (this.blocksPlaced.contains(new BlockLocation(location))) {
-            this.blocksCaught++;
+        // Print all blocks in blocksPlaced
+        System.out.println("----- BLOCKS PLACED -----");
+        for (BlockLocation block : blocksPlaced) {
+            System.out.println(block);
         }
-    }
+
+        // Print all incoming block locations
+        System.out.println("----- INCOMING BLOCK LOCATIONS -----");
+        for (Location location : locations) {
+            System.out.println("Location: " + location + " -> BlockLocation: " + new BlockLocation(location));
+        }
+
+        System.out.println("----- BEGINNING BLOCKS MATCH CHECK -----");
+
+        for (Location location : locations) {
+            BlockLocation blockLocation = new BlockLocation(location);
+            System.out.println("Checking Block Location: " + blockLocation);
+
+            if (this.blocksPlaced.contains(blockLocation) && !blocksBlown.contains(blockLocation)) {
+                System.out.println("Block matched and added to blocksBlown: " + blockLocation);
+                blocksBlown.add(blockLocation);
+                found = true;
+            } else if (!this.blocksPlaced.contains(blockLocation)) {
+                System.out.println("Block not found in blocksPlaced: " + blockLocation);
+            } else if (blocksBlown.contains(blockLocation)) {
+                System.out.println("Block already in blocksBlown: " + blockLocation);
+            }
+        }
+
+        if (found) {
+            this.blocksCaught++;
+            System.out.println("Blocks Caught Incremented: " + this.blocksCaught);
+        } else {
+            System.out.println("No Blocks Caught Incremented.");
+        }
+        System.out.println("----- END -----");
+
+        return found;
+    }*/
 }

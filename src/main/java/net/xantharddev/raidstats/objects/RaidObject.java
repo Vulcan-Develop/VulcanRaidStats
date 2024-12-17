@@ -1,12 +1,10 @@
 package net.xantharddev.raidstats.objects;
 
 import com.golfing8.kore.object.Raid;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class RaidObject {
@@ -16,6 +14,7 @@ public class RaidObject {
     private final Map<String, Map<UUID, PlayerStats>> factionStats; // Maps faction name (Defend / Raid) -> (player UUID -> stats)
     private final Raid koreRaid;
     private long purgeTime = -1L;
+    private Set<BlockLocation> blocksBlown = new HashSet<>();
 
     public RaidObject(String raidingFaction, String defendingFaction, Raid koreRaid) {
         this.id = UUID.randomUUID();
@@ -66,10 +65,6 @@ public class RaidObject {
 
     public Map<UUID, PlayerStats> getStatsForFaction(String faction) {
         return factionStats.getOrDefault(faction, new HashMap<>());
-    }
-
-    public PlayerStats getPlayerStats(String faction, UUID playerUUID) {
-        return factionStats.getOrDefault(faction, new HashMap<>()).get(playerUUID);
     }
 
     public void updatePlayerStats(String faction, UUID playerUUID, StatsUpdater updater) {
@@ -148,22 +143,53 @@ public class RaidObject {
      *
      * @param faction   The faction of the player (raiding or defending).
      * @param playerUUID The UUID of the player.
-     * @param location Location of the block placed
      */
-    public void addBlocksPlaced(String faction, UUID playerUUID, Location location) {
-        updatePlayerStats(faction, playerUUID, stats -> stats.addBlocksPlaced(location));
+    public void addBlocksPlaced(String faction, UUID playerUUID) {
+        updatePlayerStats(faction, playerUUID, PlayerStats::addBlocksPlaced);
     }
+
+    public Map<RaidStatType, Integer> getFactionTotals(String factionId) {
+        // Initialize totals map with default values for both integer and double stats
+        Map<RaidStatType, Integer> combinedTotals = new EnumMap<>(RaidStatType.class);
+
+        // Initialize the map with zero values for all stat types
+        Arrays.stream(RaidStatType.values())
+                .forEach(statType -> combinedTotals.put(statType, 0));
+
+        // Get the stats for the given faction
+        Map<UUID, PlayerStats> statsForFaction = getStatsForFaction(factionId);
+
+        // Sum up the stats for all players in the faction
+        for (PlayerStats stats : statsForFaction.values()) {
+            combinedTotals.merge(RaidStatType.KILLS, stats.getKills(), Integer::sum);
+            combinedTotals.merge(RaidStatType.DEATHS, stats.getDeaths(), Integer::sum);
+            combinedTotals.merge(RaidStatType.BLOCKS_PLACED, stats.getBlocksPlaced(), Integer::sum);
+            combinedTotals.merge(RaidStatType.HITS_DEALT, stats.getHitsDealt(), Integer::sum);
+            combinedTotals.merge(RaidStatType.HITS_TAKEN, stats.getHitsTaken(), Integer::sum);
+            combinedTotals.merge(RaidStatType.DAMAGE_GIVEN, stats.getDamageDealt(), Integer::sum);
+            combinedTotals.merge(RaidStatType.DAMAGE_TAKEN, stats.getDamageTaken(), Integer::sum);
+        }
+
+        return combinedTotals;
+    }
+
+
 
     /**
      * Adds blocks caught to the specified player in the specified faction.
      *
      * @param faction   The faction of the player (raiding or defending).
-     * @param location Location of the block placed
-     */
-    public void addBlocksCaught(String faction, Location location) {
+     * @param locations Location of the block placed
+     *//*
+    public boolean addBlocksCaught(String faction, List<Location> locations) {
         Map<UUID, PlayerStats> defendingPlayers = getStatsForFaction(faction);
 
         // Iterate through each player's stats in the faction
-        defendingPlayers.values().forEach(stats -> stats.addBlocksCaught(location));
-    }
+        for (PlayerStats stats : defendingPlayers.values()) {
+            if (stats.addBlocksCaught(locations, blocksBlown)) {
+                return true;
+            }
+        }
+        return false;
+    }*/
 }

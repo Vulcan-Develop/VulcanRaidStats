@@ -41,12 +41,27 @@ public class RaidGUI extends GUI<Integer> {
 
         // Close Button Configuration
         this.closeSlot = config.getInt("gui.close.slot", 22);
+        // Fetch and build the close item
+        String closeName = config.getString("gui.close.name", "&cClose");
+        Material closeMaterial = Material.valueOf(config.getString("gui.close.material", "SKULL_ITEM"));
+        byte closeDamage = (byte) config.getInt("gui.close.damage", 0);
+        String closeUrl = config.getString("gui.close.url");
+
+        // Debugging lines for each value
+        Bukkit.getLogger().info("Close item name: " + closeName);
+        Bukkit.getLogger().info("Close item material: " + closeMaterial);
+        Bukkit.getLogger().info("Close item damage: " + closeDamage);
+        Bukkit.getLogger().info("Close item URL: " + closeUrl);
+
+        // Create the close item
         this.closeItem = SimpleItem.builder()
-                .setName(config.getString("gui.close.name", "&cClose"))
-                .setMaterial(Material.valueOf(config.getString("gui.close.material", "SKULL_ITEM")))
-                .setDamage((byte) config.getInt("gui.close.damage", 0))
-                .setUrl(config.getString("gui.close.url"))
+                .setName(closeName)
+                .setMaterial(closeMaterial)
+                .setDamage(closeDamage)
+                .setUrl(closeUrl)
                 .build();
+
+        Bukkit.getLogger().info("Close item built successfully: " + closeItem);  // Debugging line
 
         // Filler Item Configuration
         this.fillerItem = SimpleItem.builder()
@@ -84,9 +99,7 @@ public class RaidGUI extends GUI<Integer> {
 
     @Override
     protected SimpleItem getItem(Integer index) {
-        if (index == closeSlot) {
-            return closeItem;
-        }
+        if (index == CLOSE_INDEX) return closeItem;
         return SimpleItem.builder().build();
     }
 
@@ -97,7 +110,7 @@ public class RaidGUI extends GUI<Integer> {
         FileConfiguration config = plugin.getConfig();
 
         for (String statKey : config.getConfigurationSection("gui.stats").getKeys(false)) {
-            RaidStatType statType = RaidStatType.valueOf(statKey.toUpperCase());
+            RaidStatType statType = statKey.equalsIgnoreCase("overall") ? null : RaidStatType.valueOf(statKey.toUpperCase());
             int slot = config.getInt("gui.stats." + statKey + ".slot");
 
             Material material = Material.valueOf(config.getString("gui.stats." + statKey + ".material", "STONE").toUpperCase());
@@ -105,30 +118,36 @@ public class RaidGUI extends GUI<Integer> {
             String name = config.getString("gui.stats." + statKey + ".name", "&7Unknown Stat");
             List<String> lore = config.getStringList("gui.stats." + statKey + ".lore");
             String url = config.getString("gui.stats." + statKey + ".url", "");
-            String rankFormat = config.getString("gui.stats." + statType.name().toLowerCase() + ".rank");
-
-            Map<UUID, PlayerStats> topStats = new HashMap<>();
-            Map<UUID, PlayerStats> defendingTopStats = raidObject.getTopStats(raidObject.getDefendingFaction(), statType, 7);
-
-            if (statType != RaidStatType.BLOCKS_PLACED && statType != RaidStatType.BLOCKS_CAUGHT) {
-                topStats = raidObject.getTopStats(raidObject.getRaidingFaction(), statType, 7);
-            }
 
             List<String> updatedLore = new ArrayList<>();
-            for (String line : lore) {
-                if (line.contains("{raiding_ranks}") && !generateRankLines(topStats, statType, rankFormat, config.getString("gui.raidColour", "&c")).isEmpty()) {
-                    line = line.replace("{raiding_ranks}", generateRankLines(topStats, statType, rankFormat, config.getString("gui.raidColour", "&c")));
-                } else {
-                    line = line.replace("{raiding_ranks}", "");
+            if (statType == null) {
+                // Replace placeholders with the faction stats for overall
+                updatedLore = replaceOverallPlaceholders(lore);
+            } else {
+                String rankFormat = config.getString("gui.stats." + statType.name().toLowerCase() + ".rank");
+
+                Map<UUID, PlayerStats> topStats = new HashMap<>();
+                Map<UUID, PlayerStats> defendingTopStats = raidObject.getTopStats(raidObject.getDefendingFaction(), statType, 7);
+
+                if (statType != RaidStatType.BLOCKS_PLACED) {
+                    topStats = raidObject.getTopStats(raidObject.getRaidingFaction(), statType, 7);
                 }
 
-                if (line.contains("{defending_ranks}") && !generateRankLines(defendingTopStats, statType, rankFormat, config.getString("gui.defendColour", "&d")).isEmpty()) {
-                    line = line.replace("{defending_ranks}", generateRankLines(defendingTopStats, statType, rankFormat, config.getString("gui.defendColour", "&d")));
-                } else {
-                    line = line.replace("{defending_ranks}", "");
+                for (String line : lore) {
+                    if (line.contains("{raiding_ranks}")) {
+                        List<String> raidingRanks = generateRankLines(topStats, statType, rankFormat, config.getString("gui.raidColour", "&c"));
+                        if (!raidingRanks.isEmpty()) {
+                            updatedLore.addAll(raidingRanks); // Add all rank lines
+                        }
+                    } else if (line.contains("{defending_ranks}")) {
+                        List<String> defendingRanks = generateRankLines(defendingTopStats, statType, rankFormat, config.getString("gui.defendColour", "&d"));
+                        if (!defendingRanks.isEmpty()) {
+                            updatedLore.addAll(defendingRanks); // Add all rank lines
+                        }
+                    } else {
+                        updatedLore.add(Colour.colour(line)); // Add other lines unchanged
+                    }
                 }
-
-                if (!line.isEmpty()) updatedLore.add(line);
             }
 
             SimpleItem statItem = SimpleItem.builder()
@@ -149,38 +168,96 @@ public class RaidGUI extends GUI<Integer> {
         return dummyItems;
     }
 
-    private String generateRankLines(Map<UUID, PlayerStats> stats, RaidStatType statType, String rankFormat, String color) {
-        StringBuilder ranks = new StringBuilder();
+    public List<String> replaceOverallPlaceholders(List<String> configLines) {
+        // Get the totals for the specified faction
+        Map<RaidStatType, Integer> defendingTotals = raidObject.getFactionTotals(raidObject.getDefendingFaction());
+        Map<RaidStatType, Integer> raidingTotals = raidObject.getFactionTotals(raidObject.getRaidingFaction());
+
+        // Get the hit stats for both factions
+        int defendingHitsDealt = defendingTotals.getOrDefault(RaidStatType.HITS_DEALT, 0);
+        int defendingHitsTaken = defendingTotals.getOrDefault(RaidStatType.HITS_TAKEN, 0);
+        int raidingHitsDealt = raidingTotals.getOrDefault(RaidStatType.HITS_DEALT, 0);
+        int raidingHitsTaken = raidingTotals.getOrDefault(RaidStatType.HITS_TAKEN, 0);
+
+        // Calculate hearts (damage divided by 2 as integers)
+        int defendingDamageDealtHearts = defendingTotals.getOrDefault(RaidStatType.DAMAGE_GIVEN, 0) / 2;
+        int defendingDamageTakenHearts = defendingTotals.getOrDefault(RaidStatType.DAMAGE_TAKEN, 0) / 2;
+        int raidingDamageDealtHearts = raidingTotals.getOrDefault(RaidStatType.DAMAGE_GIVEN, 0) / 2;
+        int raidingDamageTakenHearts = raidingTotals.getOrDefault(RaidStatType.DAMAGE_TAKEN, 0) / 2;
+
+        // Iterate over the config lines and replace placeholders with actual values
+        List<String> updatedLines = new ArrayList<>();
+        for (String line : configLines) {
+            // Replace placeholders for defending faction
+            line = line.replace("{defending_kills}", String.format("%,d", defendingTotals.getOrDefault(RaidStatType.KILLS, 0)));
+            line = line.replace("{defending_deaths}", String.format("%,d", defendingTotals.getOrDefault(RaidStatType.DEATHS, 0)));
+            line = line.replace("{defending_blocks_placed}", String.format("%,d", defendingTotals.getOrDefault(RaidStatType.BLOCKS_PLACED, 0)));
+
+            // Replace damage-related placeholders, defaulting to 0 if not available
+            line = line.replace("{defending_damage_dealt}", String.format("%,d", defendingTotals.getOrDefault(RaidStatType.DAMAGE_GIVEN, 0)));
+            line = line.replace("{defending_damage_taken}", String.format("%,d", defendingTotals.getOrDefault(RaidStatType.DAMAGE_TAKEN, 0)));
+            line = line.replace("{defending_damage_dealt_hits}", String.format("%,d", defendingHitsDealt));
+            line = line.replace("{defending_damage_dealt_hearts}", String.format("%,d", defendingDamageDealtHearts));
+            line = line.replace("{defending_damage_taken_hits}", String.format("%,d", defendingHitsTaken));
+            line = line.replace("{defending_damage_taken_hearts}", String.format("%,d", defendingDamageTakenHearts));
+
+            // Replace placeholders for raiding faction
+            line = line.replace("{attacking_kills}", String.format("%,d", raidingTotals.getOrDefault(RaidStatType.KILLS, 0)));
+            line = line.replace("{attacking_deaths}", String.format("%,d", raidingTotals.getOrDefault(RaidStatType.DEATHS, 0)));
+            line = line.replace("{attacking_blocks_placed}", String.format("%,d", raidingTotals.getOrDefault(RaidStatType.BLOCKS_PLACED, 0)));
+
+            // Replace damage-related placeholders, defaulting to 0 if not available
+            line = line.replace("{attacking_damage_dealt}", String.format("%,d", raidingTotals.getOrDefault(RaidStatType.DAMAGE_GIVEN, 0)));
+            line = line.replace("{attacking_damage_taken}", String.format("%,d", raidingTotals.getOrDefault(RaidStatType.DAMAGE_TAKEN, 0)));
+            line = line.replace("{attacking_damage_dealt_hits}", String.format("%,d", raidingHitsDealt));
+            line = line.replace("{attacking_damage_dealt_hearts}", String.format("%,d", raidingDamageDealtHearts));
+            line = line.replace("{attacking_damage_taken_hits}", String.format("%,d", raidingHitsTaken));
+            line = line.replace("{attacking_damage_taken_hearts}", String.format("%,d", raidingDamageTakenHearts));
+
+            // Add line to updated list if it contains any replacements
+            updatedLines.add(line);
+        }
+
+        return updatedLines;
+    }
+
+    private List<String> generateRankLines(Map<UUID, PlayerStats> stats, RaidStatType statType, String rankFormat, String color) {
+        List<String> ranks = new ArrayList<>();
         int rank = 1;
 
         if (stats.isEmpty()) {
-            return "";
+            return new ArrayList<>();
         }
 
         for (Map.Entry<UUID, PlayerStats> entryStat : stats.entrySet()) {
             String playerName = Bukkit.getServer().getOfflinePlayer(entryStat.getKey()).getName();
             int statValue = statType.getValue(entryStat.getValue());
 
+            // Start with a fresh copy of rankFormat for this rank
+            String currentRankFormat = rankFormat;
+
             // If the stat type is DAMAGE_GIVEN or DAMAGE_TAKEN, convert the value to hearts
             if (statType == RaidStatType.DAMAGE_GIVEN || statType == RaidStatType.DAMAGE_TAKEN) {
-                double hearts = statValue / 2.0;
-                String heartsString = String.format("%.1f", hearts);
-                rankFormat = rankFormat.replace("{hearts}", heartsString);
-                if (statType == RaidStatType.DAMAGE_GIVEN) {
-                    rankFormat = rankFormat.replace("{hits}", String.format("%,d", entryStat.getValue().getHits()));
-                }
+                // Convert stat value to hearts and format
+                String heartsString = String.format("%.1f", statValue / 2.0);
+                currentRankFormat = currentRankFormat.replace("{hearts}", heartsString);
 
+                // Replace hits based on the stat type
+                int hits = statType == RaidStatType.DAMAGE_GIVEN ? entryStat.getValue().getHitsDealt() : entryStat.getValue().getHitsTaken();
+                currentRankFormat = currentRankFormat.replace("{hits}", String.format("%,d", hits));
             }
 
             // Replace placeholders in the rank format
-            ranks.append(rankFormat.replace("{rank}", String.format("%,d", rank))
+            String formattedRank = currentRankFormat
+                    .replace("{rank}", String.format("%,d", rank))
                     .replace("{player_name}", playerName)
                     .replace("{stat_value}", String.format("%,d", statValue))
-                    .replace("{color}", color));  // Include the color formatting
+                    .replace("{color}", color);
+
+            ranks.add(formattedRank); // Add new line after each rank
             rank++;
         }
-        return ranks.toString();
+
+        return ranks;
     }
-
-
 }
