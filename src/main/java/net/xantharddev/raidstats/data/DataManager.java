@@ -102,18 +102,14 @@ public class DataManager {
 
         if (files != null) {
             for (File file : files) {
-                String raidId = file.getName().replace(".yml", "");  // Get raidId from filename (without extension)
-                Bukkit.getLogger().info("Loading raid data from file: " + file.getName() + " (Raid ID: " + raidId + ")");
+                String raidId = file.getName().replace(".yml", "");
 
                 Map<String, Object> raidData = loadRaidDataFromFile(file);
 
                 if (raidData != null) {
-                    Bukkit.getLogger().info("Raid data successfully loaded for Raid ID: " + raidId);
 
                     String raidingFaction = (String) raidData.get("raidingID");
                     String defendingFaction = (String) raidData.get("defendingID");
-
-                    Bukkit.getLogger().info("Raiding Faction: " + raidingFaction + ", Defending Faction: " + defendingFaction);
 
                     Map<String, Map<UUID, PlayerStats>> factionStats = new HashMap<>();
                     factionStats.put(raidingFaction, loadFactionStats(raidData.get("raidingFaction")));
@@ -125,7 +121,6 @@ public class DataManager {
                             .filter(raid -> raid.getRaided().equals(defendingFaction) && raid.getFaction().equals(raidingFaction))
                             .findAny()
                             .ifPresent(raid -> {
-                                Bukkit.getLogger().info("Found matching active raid for Raid ID: " + raidId + ", adding to statsManager.");
                                 statsManager.addRaid(new RaidObject(uuid, raidingFaction, defendingFaction, -1, raid, factionStats));
                             });
 
@@ -133,30 +128,17 @@ public class DataManager {
                             .filter(entry -> entry.getKey().equals(defendingFaction) && entry.getValue().getA().equals(raidingFaction))
                             .findAny()
                             .ifPresent(grace -> {
-                                Bukkit.getLogger().info("Found grace period for Raid ID: " + raidId + ", calculating purge time.");
-
-                                // Get the grace period in minutes
-                                int graceMins = grace.getValue().getB();
-
-                                if (graceMins <= 0) {
-                                    Bukkit.getLogger().info("Grace period is non-positive for Raid ID: " + raidId + ", skipping.");
-                                    return;
-                                }
-
+                                int graceMins = grace.getValue().getB(); //Minutes
+                                if (graceMins <= 0) return;
                                 // Convert grace period from minutes to milliseconds
                                 long graceValueMillis = (graceMins + 1L) * 60L * 1000L;
-
                                 // Calculate the new purge time by adding the grace period to the current Unix timestamp
                                 long purgeUnix = System.currentTimeMillis() + graceValueMillis;
-
-                                // Create and add a new RaidObject with the calculated purge time
-                                Bukkit.getLogger().info("New purge time calculated: " + purgeUnix + " for Raid ID: " + raidId);
                                 statsManager.addRaid(new RaidObject(uuid, raidingFaction, defendingFaction, purgeUnix, factionStats));
 
                                 // Schedule the task to remove the raid after the grace period ends
-                                long graceEndDelayTicks = graceValueMillis / 50L; // Convert milliseconds to ticks (1 tick = 50ms)
+                                long graceEndDelayTicks = graceValueMillis / 50L;
                                 Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
-                                    Bukkit.getLogger().info("Grace period ended, removing raid for Raid ID: " + raidId);
                                     statsManager.removeRaid(raidingFaction, defendingFaction);
                                 }, graceEndDelayTicks);
                             });

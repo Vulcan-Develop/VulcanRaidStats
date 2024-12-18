@@ -47,12 +47,6 @@ public class RaidGUI extends GUI<Integer> {
         byte closeDamage = (byte) config.getInt("gui.close.damage", 0);
         String closeUrl = config.getString("gui.close.url");
 
-        // Debugging lines for each value
-        Bukkit.getLogger().info("Close item name: " + closeName);
-        Bukkit.getLogger().info("Close item material: " + closeMaterial);
-        Bukkit.getLogger().info("Close item damage: " + closeDamage);
-        Bukkit.getLogger().info("Close item URL: " + closeUrl);
-
         // Create the close item
         this.closeItem = SimpleItem.builder()
                 .setName(closeName)
@@ -60,8 +54,6 @@ public class RaidGUI extends GUI<Integer> {
                 .setDamage(closeDamage)
                 .setUrl(closeUrl)
                 .build();
-
-        Bukkit.getLogger().info("Close item built successfully: " + closeItem);  // Debugging line
 
         // Filler Item Configuration
         this.fillerItem = SimpleItem.builder()
