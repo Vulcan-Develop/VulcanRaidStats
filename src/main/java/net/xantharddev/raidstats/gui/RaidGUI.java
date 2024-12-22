@@ -1,6 +1,7 @@
 package net.xantharddev.raidstats.gui;
 
 import com.massivecraft.factions.Factions;
+import net.minecraft.server.v1_8_R3.EntityFishingHook;
 import net.xantharddev.raidstats.RaidStats;
 import net.xantharddev.raidstats.objects.Colour;
 import net.xantharddev.raidstats.objects.PlayerStats;
@@ -231,7 +232,7 @@ public class RaidGUI extends GUI<Integer> {
             // If the stat type is DAMAGE_GIVEN or DAMAGE_TAKEN, convert the value to hearts
             if (statType == RaidStatType.DAMAGE_GIVEN || statType == RaidStatType.DAMAGE_TAKEN) {
                 // Convert stat value to hearts and format
-                String heartsString = String.format("%.1f", statValue / 2.0);
+                String heartsString = String.format("%,.0f", statValue / 2.0);
                 currentRankFormat = currentRankFormat.replace("{hearts}", heartsString);
 
                 // Replace hits based on the stat type

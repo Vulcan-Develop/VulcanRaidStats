@@ -17,6 +17,29 @@ public class StatsManager {
     public StatsManager(RaidStats plugin) {
         this.plugin = plugin;
         this.raids = new ArrayList<>();
+        syncRaids();
+    }
+
+    private void syncRaids() {
+        plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+            Map<String, RaidObject> raidMap = raids.stream()
+                    .collect(Collectors.toMap(
+                            raidObject -> generateKey(raidObject.getDefendingFaction(), raidObject.getRaidingFaction()),
+                            raidObject -> raidObject
+                    ));
+
+            plugin.getRaidTimer().getActiveRaids().forEach(koreRaid -> {
+                String key = generateKey(koreRaid.getRaided(), koreRaid.getFaction());
+                RaidObject raidObject = raidMap.get(key);
+                if (raidObject != null) {
+                    raidObject.setKoreRaid(koreRaid);
+                }
+            });
+        },0L, 600L);
+    }
+
+    private String generateKey(String defendingFaction, String raidingFaction) {
+        return defendingFaction + "::" + raidingFaction;
     }
 
     /**

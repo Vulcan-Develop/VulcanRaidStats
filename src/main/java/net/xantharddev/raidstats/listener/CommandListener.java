@@ -103,8 +103,6 @@ public class CommandListener implements Listener {
             String raidingFaction = getFactionTag(raid.getRaidingFaction());
             String defendingFaction = getFactionTag(raid.getDefendingFaction());
 
-            System.out.println("RAIDING: " + raidingFaction + " DEFENDING: " + defendingFaction);
-
             String message = plugin.getConfig().getString("messages.active-raid")
                     .replace("{number}", String.valueOf(number))
                     .replace("{raidingFaction}", raidingFaction)

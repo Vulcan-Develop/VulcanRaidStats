@@ -12,7 +12,7 @@ public class RaidObject {
     private final String raidingFaction;
     private final String defendingFaction;
     private final Map<String, Map<UUID, PlayerStats>> factionStats; // Maps faction name (Defend / Raid) -> (player UUID -> stats)
-    private final Raid koreRaid;
+    private Raid koreRaid;
     private long purgeTime = -1L;
     private Set<BlockLocation> blocksBlown = new HashSet<>();
 
@@ -54,6 +54,8 @@ public class RaidObject {
     public UUID getId() {return id;}
 
     public Raid getKoreRaid() { return koreRaid; }
+
+    public void setKoreRaid(Raid raid) { this.koreRaid = raid; }
 
     public String getRaidingFaction() {
         return raidingFaction;
