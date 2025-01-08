@@ -69,6 +69,11 @@ public class RaidObject {
         return factionStats.getOrDefault(faction, new HashMap<>());
     }
 
+
+    public PlayerStats getPlayerStats(String faction, UUID playerUUID) {
+        return factionStats.getOrDefault(faction, new HashMap<>()).get(playerUUID);
+    }
+
     public void updatePlayerStats(String faction, UUID playerUUID, StatsUpdater updater) {
         factionStats.computeIfAbsent(faction, f -> new HashMap<>())
                     .compute(playerUUID, (uuid, stats) -> {

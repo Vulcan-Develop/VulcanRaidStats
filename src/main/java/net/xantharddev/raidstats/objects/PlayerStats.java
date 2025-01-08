@@ -1,5 +1,8 @@
 package net.xantharddev.raidstats.objects;
 
+import java.util.HashMap;
+import java.util.UUID;
+
 public class PlayerStats {
     private int kills;
     private int deaths;
