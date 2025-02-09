@@ -14,7 +14,6 @@ public class RaidObject {
     private final Map<String, Map<UUID, PlayerStats>> factionStats; // Maps faction name (Defend / Raid) -> (player UUID -> stats)
     private Raid koreRaid;
     private long purgeTime = -1L;
-    private Set<BlockLocation> blocksBlown = new HashSet<>();
 
     public RaidObject(String raidingFaction, String defendingFaction, Raid koreRaid) {
         this.id = UUID.randomUUID();

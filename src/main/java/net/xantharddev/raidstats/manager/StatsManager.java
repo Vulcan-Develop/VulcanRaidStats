@@ -35,7 +35,7 @@ public class StatsManager {
                     raidObject.setKoreRaid(koreRaid);
                 }
             });
-        },0L, 600L);
+        },600L, 600L);
     }
 
     private String generateKey(String defendingFaction, String raidingFaction) {

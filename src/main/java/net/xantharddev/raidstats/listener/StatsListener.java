@@ -46,37 +46,9 @@ public class StatsListener implements Listener {
         });
     }
 
-    /*
-    @EventHandler
-    public void onEntityExplode(EntityExplodeEvent event) {
-        // Ensure the exploding entity is TNT
-        if (event.getEntity() instanceof TNTPrimed) {
-            TNTPrimed tnt = (TNTPrimed) event.getEntity();
-            Location tntLocation = tnt.getLocation();
-
-            // Get the faction associated with the TNT's location
-            Faction faction = getFactionFromLoc(tntLocation);
-            if (faction == null || faction.isSystemFaction() || !isInBaseRegion(faction, tntLocation)) return;
-
-            // Cooldown check
-            String factionId = faction.getId();
-
-            // Check for an active raid
-            RaidObject raid = statsManager.getRaidDefendingByFacID(factionId);
-            if (raid == null || raid.isGrace()) return;
-
-            // Filter exploded blocks with zero durability
-            List<Location> locations = event.blockList().stream()
-                    .filter(block -> block.getWorld().getDurabilityAt(block.getX(), block.getY(), block.getZ()) == 0)
-                    .map(Block::getLocation)
-                    .collect(Collectors.toList());
-
-            // Check if blocks caught match the cannon-patched condition
-            raid.addBlocksCaught(factionId, locations);
-        }
-    }*/
-
-
+    /**
+     * Kills / Death's Raid Stats Tracking
+     */
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -90,7 +62,7 @@ public class StatsListener implements Listener {
             Faction killerFac = getFactionFromPlayer(killerPlayer);
             if (deadFac == null || killerFac == null) return;
 
-            // Get the list of raids between these factions
+            // Get the list of raids between these factions (Cases for raiding each other or RPost)
             List<RaidObject> raids = statsManager.getRaidsByFactionIds(deadFac.getId(), killerFac.getId());
             if (raids.isEmpty()) return;
 
@@ -99,33 +71,18 @@ public class StatsListener implements Listener {
                 // Skip raids in grace period
                 if (raid.isGrace()) continue;
 
-                String raidingFactionId, defendingFactionId;
-                boolean bothPlayersInBR;
+                boolean isAttackerRaiding = raid.getRaidingFaction().equals(killerFac.getId());
 
-                // Determine if the killer belongs to the raiding faction
-                if (raid.getRaidingFaction().equals(killerFac.getId())) {
-                    raidingFactionId = killerFac.getId();
-                    defendingFactionId = deadFac.getId();
-                    bothPlayersInBR = isInBaseRegion(deadFac, deadPlayer.getLocation());
-                } else {
-                    raidingFactionId = deadFac.getId();
-                    defendingFactionId = killerFac.getId();
-                    bothPlayersInBR = isInBaseRegion(killerFac, killerPlayer.getLocation());
-                }
-
-                // Only update stats if both players are in the base region
-                if (!bothPlayersInBR) continue;
-
-                // Update stats for this raid
-                updateStats(raid, raidingFactionId, defendingFactionId, killerFac, killerPlayer, deadPlayer);
+                updateKillTracking(raid, killerPlayer, deadPlayer, isAttackerRaiding);
             }
         });
     }
 
-    private void updateStats(RaidObject raid, String raidingFactionId, String defendingFactionId, Faction killerFac, Player killerPlayer, Player deadPlayer) {
-        boolean isKillerRaiding = raidingFactionId.equals(killerFac.getId());
+    private void updateKillTracking(RaidObject raid, Player killerPlayer, Player deadPlayer , boolean isAttackerRaiding) {
+        String raidingFactionId = raid.getRaidingFaction();
+        String defendingFactionId = raid.getDefendingFaction();
 
-        if (isKillerRaiding) {
+        if (isAttackerRaiding) {
             raid.addKill(raidingFactionId, killerPlayer.getUniqueId(), 1);
             raid.addDeath(defendingFactionId, deadPlayer.getUniqueId(), 1);
         } else {
@@ -134,38 +91,35 @@ public class StatsListener implements Listener {
         }
     }
 
+    /**
+     * Damage Taken / Given Raid Stats Tracking
+     */
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        // Run asynchronously for performance
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            // Ensure the damaged entity is a player
+            if (event.isCancelled()) return;
+
             if (!(event.getEntity() instanceof Player)) return;
+
             Player damagedPlayer = (Player) event.getEntity();
             double damage = event.getDamage();
 
-            // Ensure the damager is a player
             if (!(event.getDamager() instanceof Player)) return;
-            Player attacker = (Player) event.getDamager();
-            if (attacker == null) return;
 
-            // Retrieve factions for both players
+            Player attacker = (Player) event.getDamager();
+
             Faction damagedFac = getFactionFromPlayer(damagedPlayer);
             Faction attackerFac = getFactionFromPlayer(attacker);
             if (damagedFac == null || attackerFac == null) return;
 
-            // Get the list of raids between these factions
             List<RaidObject> raids = statsManager.getRaidsByFactionIds(damagedFac.getId(), attackerFac.getId());
             if (raids.isEmpty()) return;
 
-            // Process each raid in the list
             for (RaidObject raid : raids) {
-                // Skip if the raid is in grace period
                 if (raid.isGrace()) continue;
 
-                // Determine if the attacker belongs to the raiding faction
                 boolean isAttackerRaiding = raid.getRaidingFaction().equals(attackerFac.getId());
 
-                // Update raid damage stats
                 updateDamageStats(raid, attacker, damagedPlayer, damage, isAttackerRaiding);
             }
         });
@@ -174,8 +128,6 @@ public class StatsListener implements Listener {
     private void updateDamageStats(RaidObject raid, Player attacker, Player damagedPlayer, double damage, boolean isAttackerRaiding) {
         String raidingFactionId = raid.getRaidingFaction();
         String defendingFactionId = raid.getDefendingFaction();
-
-        if (!isInBaseRegion(Factions.getInstance().getFactionById(defendingFactionId), attacker.getLocation())) return;
 
         if (isAttackerRaiding) {
             raid.addDamageGiven(raidingFactionId, attacker.getUniqueId(), damage);
