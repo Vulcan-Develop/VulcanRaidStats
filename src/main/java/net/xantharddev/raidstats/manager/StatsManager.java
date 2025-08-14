@@ -22,6 +22,7 @@ public class StatsManager {
 
     private void syncRaids() {
         plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+            if(plugin.getRaidTimer() == null || plugin.getRaidTimer().getActiveRaids() == null) return;
             Map<String, RaidObject> raidMap = raids.stream()
                     .collect(Collectors.toMap(
                             raidObject -> generateKey(raidObject.getDefendingFaction(), raidObject.getRaidingFaction()),
