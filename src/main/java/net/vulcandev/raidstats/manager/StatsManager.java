@@ -1,29 +1,39 @@
-package net.xantharddev.raidstats.manager;
+package net.vulcandev.raidstats.manager;
 
 import com.massivecraft.factions.Board;
 import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.Faction;
-import net.xantharddev.raidstats.RaidStats;
-import net.xantharddev.raidstats.objects.RaidObject;
+import net.vulcandev.raidstats.objects.VulcanRaidStats;
 import org.bukkit.Location;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Manages all active raid tracking objects.
+ * Handles raid creation, lookup, removal, and synchronization with FactionsKore.
+ */
 public class StatsManager {
-    private final RaidStats plugin;
-    private final List<RaidObject> raids;
+    private final net.vulcandev.raidstats.VulcanRaidStats plugin;
+    private final List<VulcanRaidStats> raids;
 
-    public StatsManager(RaidStats plugin) {
+    public StatsManager(net.vulcandev.raidstats.VulcanRaidStats plugin) {
         this.plugin = plugin;
         this.raids = new ArrayList<>();
         syncRaids();
     }
 
+    /**
+     * Periodically syncs raid objects with FactionsKore's active raids.
+     * Ensures our raid data stays in sync with the external raid system.
+     */
     private void syncRaids() {
         plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, () -> {
             if(plugin.getRaidTimer() == null || plugin.getRaidTimer().getActiveRaids() == null) return;
-            Map<String, RaidObject> raidMap = raids.stream()
+            Map<String, VulcanRaidStats> raidMap = raids.stream()
                     .collect(Collectors.toMap(
                             raidObject -> generateKey(raidObject.getDefendingFaction(), raidObject.getRaidingFaction()),
                             raidObject -> raidObject
@@ -31,14 +41,17 @@ public class StatsManager {
 
             plugin.getRaidTimer().getActiveRaids().forEach(koreRaid -> {
                 String key = generateKey(koreRaid.getRaided(), koreRaid.getFaction());
-                RaidObject raidObject = raidMap.get(key);
-                if (raidObject != null) {
-                    raidObject.setKoreRaid(koreRaid);
+                VulcanRaidStats vulcanRaidStats = raidMap.get(key);
+                if (vulcanRaidStats != null) {
+                    vulcanRaidStats.setKoreRaid(koreRaid);
                 }
             });
         },600L, 600L);
     }
 
+    /**
+     * Generates a unique key for a raid based on defending and raiding faction IDs.
+     */
     private String generateKey(String defendingFaction, String raidingFaction) {
         return defendingFaction + "::" + raidingFaction;
     }
@@ -46,9 +59,9 @@ public class StatsManager {
     /**
      * Adds a new raid to the manager.
      *
-     * @param raid The RaidObject object to add.
+     * @param raid The VulcanRaidStats object to add.
      */
-    public void addRaid(RaidObject raid) {
+    public void addRaid(VulcanRaidStats raid) {
         raids.add(raid);
     }
 
@@ -56,9 +69,9 @@ public class StatsManager {
      * Retrieves a raid by its unique UUID.
      *
      * @param uuid The UUID of the raid to find.
-     * @return The corresponding RaidObject, or null if not found.
+     * @return The corresponding VulcanRaidStats, or null if not found.
      */
-    public RaidObject getRaidByUUID(UUID uuid) {
+    public VulcanRaidStats getRaidByUUID(UUID uuid) {
         return raids.stream().filter(r -> r.getId().equals(uuid)).findFirst().orElse(null);
     }
 
@@ -66,27 +79,36 @@ public class StatsManager {
      * Retrieves the raid where a specific faction is defending.
      *
      * @param factionId The ID of the defending faction.
-     * @return The corresponding RaidObject, or null if not found.
+     * @return The corresponding VulcanRaidStats, or null if not found.
      */
-    public RaidObject getRaidDefendingByFacID(String factionId) {
+    public VulcanRaidStats getRaidDefendingByFacID(String factionId) {
         return raids.stream()
                 .filter(raid -> isDefendingFaction(raid, factionId))
                 .findFirst()
                 .orElse(null);
     }
 
+    /**
+     * Checks if a faction owns the raiding outpost.
+     */
     public boolean doesFactionOwnRaidingOutpost(String factionId) {
         if (plugin.getRaidingOutpost() == null || plugin.getRaidingOutpost().getOutpost() == null || plugin.getRaidingOutpost().getOutpost().getOwner() == null) return false;
         return plugin.getRaidingOutpost().getOutpost().getOwner().equals(factionId);
     }
 
+    /**
+     * Checks if a location is within the raiding outpost territory.
+     */
     public boolean isLocInRPost(Location loc) {
         if (plugin.getRaidingOutpost() == null || plugin.getRaidingOutpost().getOutpost() == null || plugin.getRaidingOutpost().getOutpost().getOwner() == null) return false;
         Faction fac = Board.getInstance().getFactionAt(new FLocation(loc));
         return fac != null && fac.getTag().equals("RaidOutpost");
     }
 
-    private boolean isDefendingFaction(RaidObject raid, String factionId) {
+    /**
+     * Determines if a faction is defending in a raid (either as the defending faction or outpost owner).
+     */
+    private boolean isDefendingFaction(VulcanRaidStats raid, String factionId) {
         return raid.getDefendingFaction().equals(factionId) || doesFactionOwnRaidingOutpost(factionId);
     }
 
@@ -95,9 +117,9 @@ public class StatsManager {
      *
      * @param faction1 The ID of the first faction (either raiding or defending).
      * @param faction2 The ID of the second faction (either raiding or defending).
-     * @return The corresponding RaidObject, or null if not found.
+     * @return The corresponding VulcanRaidStats, or null if not found.
      */
-    public List<RaidObject> getRaidsByFactionIds(String faction1, String faction2) {
+    public List<VulcanRaidStats> getRaidsByFactionIds(String faction1, String faction2) {
         return raids.stream()
                 .filter(raid -> (raid.getRaidingFaction().equals(faction1) && isDefendingFaction(raid, faction2)) ||
                         (raid.getRaidingFaction().equals(faction2) && isDefendingFaction(raid, faction1)))
@@ -118,9 +140,9 @@ public class StatsManager {
     /**
      * Retrieves all ongoing raids.
      *
-     * @return A list of all RaidObject objects.
+     * @return A list of all VulcanRaidStats objects.
      */
-    public List<RaidObject> getAllRaids() {
+    public List<VulcanRaidStats> getAllRaids() {
         return new ArrayList<>(raids);
     }
 

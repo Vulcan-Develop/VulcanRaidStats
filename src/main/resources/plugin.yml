@@ -1,9 +1,6 @@
-name: ${project.name}
+name: ${project.artifactId}
 main: ${project.groupId}.${project.artifactId}
 version: ${project.version}
-authors: [Xanthard]
-depend: [FactionsKore, Factions]
-commands:
-  viewraid:
-    description: View details of a specific raid.
-    usage: /viewraid <raidUUID>
+description: ${project.description}
+authors: [Xanthard, OfficialGaming]
+depend: [FactionsKore, Factions, VulcanLib]

@@ -1,4 +1,4 @@
-package net.xantharddev.raidstats.listener;
+package net.vulcandev.raidstats.listener;
 
 import com.massivecraft.factions.FPlayers;
 import com.massivecraft.factions.Factions;
@@ -6,10 +6,9 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.xantharddev.raidstats.RaidStats;
-import net.xantharddev.raidstats.manager.StatsManager;
-import net.xantharddev.raidstats.objects.Colour;
-import net.xantharddev.raidstats.objects.RaidObject;
+import net.vulcandev.raidstats.manager.StatsManager;
+import net.vulcandev.raidstats.objects.VulcanRaidStats;
+import net.xantharddev.vulcanlib.libs.Colour;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,23 +20,31 @@ import com.golfing8.kore.feature.RaidClaimFeature.Pair;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Intercepts configured commands to display active raid and grace period information.
+ * When certain commands are executed, the player is shown clickable raid listings instead.
+ */
 public class CommandListener implements Listener {
-    private final RaidStats plugin;
+    private final net.vulcandev.raidstats.VulcanRaidStats plugin;
     private final StatsManager statsManager;
     private final List<String> validCommands;
     private final List<String> validStaffRaidCommands;
     private final List<String> validClearCommands;
 
-    public CommandListener(RaidStats plugin, StatsManager statsManager) {
+    public CommandListener(net.vulcandev.raidstats.VulcanRaidStats plugin, StatsManager statsManager) {
         this.plugin = plugin;
         this.statsManager = statsManager;
 
         // Load configurable commands from config.yml
-        this.validCommands = plugin.getConfig().getStringList("valid-commands");
-        this.validStaffRaidCommands = plugin.getConfig().getStringList("valid-staff-raid-commands");
-        this.validClearCommands = plugin.getConfig().getStringList("valid-clear-commands");
+        this.validCommands = plugin.conf().getStringList("valid-commands");
+        this.validStaffRaidCommands = plugin.conf().getStringList("valid-staff-raid-commands");
+        this.validClearCommands = plugin.conf().getStringList("valid-clear-commands");
     }
 
+    /**
+     * Intercepts command execution to show raid information for configured commands.
+     * Staff with permissions can bypass interception for certain commands.
+     */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onCommandPreProcess(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
@@ -77,10 +84,14 @@ public class CommandListener implements Listener {
         return validStaffRaidCommands.stream().anyMatch(command::startsWith);
     }
 
+    /**
+     * Displays a list of all active raids visible to the player.
+     * Shows raid participants, time elapsed, and time remaining with clickable links.
+     */
     private void displayActiveRaids(Player player) {
         sendMessage(player, "messages.active-raids-header");
 
-        List<RaidObject> allRaids = statsManager.getAllRaids();
+        List<VulcanRaidStats> allRaids = statsManager.getAllRaids();
 
         if (allRaids.isEmpty()) {
             sendMessage(player, "messages.no-active-raids");
@@ -90,7 +101,7 @@ public class CommandListener implements Listener {
         int number = 1;
         boolean activeRaids = false;
 
-        for (RaidObject raid : allRaids) {
+        for (VulcanRaidStats raid : allRaids) {
             if (raid.isGrace()) continue;
 
             if (!raid.getKoreRaid().isDiscovered()) {
@@ -103,7 +114,7 @@ public class CommandListener implements Listener {
             String raidingFaction = getFactionTag(raid.getRaidingFaction());
             String defendingFaction = getFactionTag(raid.getDefendingFaction());
 
-            String message = plugin.getConfig().getString("messages.active-raid")
+            String message = plugin.conf().getString("messages.active-raid")
                     .replace("{number}", String.valueOf(number))
                     .replace("{raidingFaction}", raidingFaction)
                     .replace("{defendingFaction}", defendingFaction)
@@ -111,7 +122,7 @@ public class CommandListener implements Listener {
                     .replace("{timeLeft}", String.valueOf(raid.getKoreRaid().getTimeLeft()));
 
             sendClickableMessage(player, message, "/viewraid " + raid.getId().toString(),
-                    plugin.getConfig().getString("messages.raid-hover-text"));
+                    plugin.conf().getString("messages.raid-hover-text"));
             number++;
         }
 
@@ -120,6 +131,10 @@ public class CommandListener implements Listener {
         }
     }
 
+    /**
+     * Displays all active grace periods after raids have ended.
+     * Grace periods prevent stat padding while factions recover.
+     */
     private void displayActiveGracePeriods(Player player) {
         sendMessage(player, "messages.active-grace-header");
 
@@ -136,28 +151,33 @@ public class CommandListener implements Listener {
             String raidingFactionId = graceDetails.getA();
             int graceTimeLeft = graceDetails.getB();
 
-            RaidObject raid = statsManager.getRaidDefendingByFacID(defendingFactionId);
+            VulcanRaidStats raid = statsManager.getRaidDefendingByFacID(defendingFactionId);
             if (raid == null) continue;
 
             String raidingFaction = getFactionTag(raidingFactionId);
             String defendingFaction = getFactionTag(defendingFactionId);
             String graceTimeLeftFormatted = graceTimeLeft > 0 ? graceTimeLeft + "m" : "No grace time left";
 
-            String message = plugin.getConfig().getString("messages.active-grace")
+            String message = plugin.conf().getString("messages.active-grace")
                     .replace("{defendingFaction}", defendingFaction)
                     .replace("{raidingFaction}", raidingFaction)
                     .replace("{graceTimeLeft}", graceTimeLeftFormatted);
 
             sendClickableMessage(player, message, "/viewraid " + raid.getId().toString(),
-                    plugin.getConfig().getString("messages.grace-hover-text"));
+                    plugin.conf().getString("messages.grace-hover-text"));
         }
     }
 
-
+    /**
+     * Gets the display tag for a faction by its ID.
+     */
     private String getFactionTag(String factionId) {
         return Factions.getInstance().getFactionById(factionId).getTag();
     }
 
+    /**
+     * Sends a clickable text message to the player with hover tooltip.
+     */
     private void sendClickableMessage(Player player, String message, String command, String hoverText) {
         TextComponent textComponent = new TextComponent(Colour.colour(message));
         textComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
@@ -166,7 +186,10 @@ public class CommandListener implements Listener {
         player.spigot().sendMessage(textComponent);
     }
 
+    /**
+     * Sends a message from the config file to the player.
+     */
     private void sendMessage(Player player, String configKey) {
-        player.sendMessage(Colour.colour(plugin.getConfig().getString(configKey)));
+        player.sendMessage(Colour.colour(plugin.conf().getString(configKey)));
     }
 }

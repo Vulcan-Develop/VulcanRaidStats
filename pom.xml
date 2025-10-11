@@ -3,12 +3,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>net.xantharddev.raidstats</groupId>
-  <artifactId>RaidStats</artifactId>
+  <groupId>net.vulcandev.raidstats</groupId>
+  <artifactId>VulcanRaidStats</artifactId>
   <version>1.3</version>
   <packaging>jar</packaging>
 
-  <name>RaidStats</name>
+  <name>VulcanRaidStats</name>
 
   <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -54,6 +54,20 @@
             <version>1.0</version>
             <scope>system</scope>
             <systemPath>C:/Development/libs/FactionsKore.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>net.xantharddev.vulcanlib</groupId>
+            <artifactId>VulcanLib</artifactId>
+            <version>2.1</version>
+            <scope>system</scope>
+            <systemPath>C:/Development/libs/VulcanLib.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.34</version>
+            <type>jar</type>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.massivecraft.factions</groupId>

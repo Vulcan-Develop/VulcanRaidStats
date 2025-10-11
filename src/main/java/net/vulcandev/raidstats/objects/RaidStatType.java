@@ -1,5 +1,9 @@
-package net.xantharddev.raidstats.objects;
+package net.vulcandev.raidstats.objects;
 
+/**
+ * Enum representing different types of raid statistics that can be tracked.
+ * Each type defines how to extract its value from a PlayerStats object.
+ */
 public enum RaidStatType {
     KILLS {
         @Override
@@ -44,5 +48,11 @@ public enum RaidStatType {
         }
     };
 
+    /**
+     * Extracts the stat value from a PlayerStats object.
+     *
+     * @param stats The player stats to extract from
+     * @return The numeric value for this stat type
+     */
     public abstract int getValue(PlayerStats stats);
 }

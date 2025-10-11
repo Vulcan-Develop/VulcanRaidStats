@@ -1,3 +1,5 @@
+config-version: 1 # Do not touch this
+
 # List of valid commands that should be intercepted -> If it starts with that cmd it will intercept (For ppl without permission)
 valid-commands:
   - "/f raids"

@@ -1,9 +1,11 @@
-package net.xantharddev.raidstats.listener;
+package net.vulcandev.raidstats.listener;
 
-import com.massivecraft.factions.*;
-import net.xantharddev.raidstats.RaidStats;
-import net.xantharddev.raidstats.manager.StatsManager;
-import net.xantharddev.raidstats.objects.RaidObject;
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import net.vulcandev.raidstats.manager.StatsManager;
+import net.vulcandev.raidstats.objects.VulcanRaidStats;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -13,17 +15,25 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
-import java.util.*;
+import java.util.List;
 
+/**
+ * Tracks player statistics during active raids.
+ * Monitors kills, deaths, damage, and blocks placed for both attacking and defending factions.
+ */
 public class StatsListener implements Listener {
-    private final RaidStats plugin;
+    private final net.vulcandev.raidstats.VulcanRaidStats plugin;
     private final StatsManager statsManager;
 
-    public StatsListener(RaidStats plugin, StatsManager statsManager) {
+    public StatsListener(net.vulcandev.raidstats.VulcanRaidStats plugin, StatsManager statsManager) {
         this.plugin = plugin;
         this.statsManager = statsManager;
     }
 
+    /**
+     * Tracks blocks placed in enemy territory during raids.
+     * Only counts blocks placed in base regions or raid outposts.
+     */
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -36,7 +46,7 @@ public class StatsListener implements Listener {
 
             if (fac.isSystemFaction()) return;
 
-            RaidObject raid = statsManager.getRaidDefendingByFacID(fac.getId());
+            VulcanRaidStats raid = statsManager.getRaidDefendingByFacID(fac.getId());
 
             if (raid == null || raid.isGrace()) return;
 
@@ -63,11 +73,11 @@ public class StatsListener implements Listener {
             if (deadFac == null || killerFac == null) return;
 
             // Get the list of raids between these factions (Cases for raiding each other or RPost)
-            List<RaidObject> raids = statsManager.getRaidsByFactionIds(deadFac.getId(), killerFac.getId());
+            List<VulcanRaidStats> raids = statsManager.getRaidsByFactionIds(deadFac.getId(), killerFac.getId());
             if (raids.isEmpty()) return;
 
             // Process each raid in the list
-            for (RaidObject raid : raids) {
+            for (VulcanRaidStats raid : raids) {
                 // Skip raids in grace period
                 if (raid.isGrace()) continue;
 
@@ -78,7 +88,7 @@ public class StatsListener implements Listener {
         });
     }
 
-    private void updateKillTracking(RaidObject raid, Player killerPlayer, Player deadPlayer , boolean isAttackerRaiding) {
+    private void updateKillTracking(VulcanRaidStats raid, Player killerPlayer, Player deadPlayer , boolean isAttackerRaiding) {
         String raidingFactionId = raid.getRaidingFaction();
         String defendingFactionId = raid.getDefendingFaction();
 
@@ -112,10 +122,10 @@ public class StatsListener implements Listener {
             Faction attackerFac = getFactionFromPlayer(attacker);
             if (damagedFac == null || attackerFac == null) return;
 
-            List<RaidObject> raids = statsManager.getRaidsByFactionIds(damagedFac.getId(), attackerFac.getId());
+            List<VulcanRaidStats> raids = statsManager.getRaidsByFactionIds(damagedFac.getId(), attackerFac.getId());
             if (raids.isEmpty()) return;
 
-            for (RaidObject raid : raids) {
+            for (VulcanRaidStats raid : raids) {
                 if (raid.isGrace()) continue;
 
                 boolean isAttackerRaiding = raid.getRaidingFaction().equals(attackerFac.getId());
@@ -125,7 +135,7 @@ public class StatsListener implements Listener {
         });
     }
 
-    private void updateDamageStats(RaidObject raid, Player attacker, Player damagedPlayer, double damage, boolean isAttackerRaiding) {
+    private void updateDamageStats(VulcanRaidStats raid, Player attacker, Player damagedPlayer, double damage, boolean isAttackerRaiding) {
         String raidingFactionId = raid.getRaidingFaction();
         String defendingFactionId = raid.getDefendingFaction();
 

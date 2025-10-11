@@ -1,24 +1,31 @@
-package net.xantharddev.raidstats.listener;
+package net.vulcandev.raidstats.listener;
 
 import com.golfing8.kore.event.RaidEndEvent;
 import com.golfing8.kore.event.RaidStartEvent;
-import net.xantharddev.raidstats.RaidStats;
-import net.xantharddev.raidstats.event.RaidStatsEndEvent;
-import net.xantharddev.raidstats.manager.StatsManager;
-import net.xantharddev.raidstats.objects.RaidObject;
+import net.vulcandev.raidstats.event.RaidStatsEndEvent;
+import net.vulcandev.raidstats.manager.StatsManager;
+import net.vulcandev.raidstats.objects.VulcanRaidStats;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+/**
+ * Listens for raid lifecycle events from FactionsKore.
+ * Manages raid tracking initialization and cleanup, including grace period handling.
+ */
 public class RaidEventListener implements Listener {
-    private final RaidStats plugin;
+    private final net.vulcandev.raidstats.VulcanRaidStats plugin;
     private final StatsManager statsManager;
 
-    public RaidEventListener(RaidStats plugin, StatsManager statsManager) {
+    public RaidEventListener(net.vulcandev.raidstats.VulcanRaidStats plugin, StatsManager statsManager) {
         this.plugin = plugin;
         this.statsManager = statsManager;
     }
 
+    /**
+     * Called when a raid starts.
+     * Creates a new raid tracking object for stats collection.
+     */
     @EventHandler
     public void onRaidStart(RaidStartEvent event) {
         // Running async to avoid blocking the main thread
@@ -27,18 +34,23 @@ public class RaidEventListener implements Listener {
             String defendingFactionId = event.getFactionRaided();
 
             // Initialize stats for both factions asynchronously
-            statsManager.addRaid(new RaidObject(raidingFactionId, defendingFactionId, event.getRaid()));
+            statsManager.addRaid(new VulcanRaidStats(raidingFactionId, defendingFactionId, event.getRaid()));
         });
     }
 
+    /**
+     * Called when a raid ends.
+     * Handles grace period logic and schedules raid cleanup.
+     * During grace, stats are frozen to prevent padding.
+     */
     @EventHandler
     public void onRaidEnd(RaidEndEvent event) {
         Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
             int graceMinutes = plugin.getRaidTimer().getGrace(event.getFactionRaided());
 
-            RaidObject raidObject = statsManager.getRaidDefendingByFacID(event.getFactionRaided());
+            VulcanRaidStats vulcanRaidStats = statsManager.getRaidDefendingByFacID(event.getFactionRaided());
             if (graceMinutes <= 0) {
-                callRaidEvent(raidObject);
+                callRaidEvent(vulcanRaidStats);
                 statsManager.removeRaid(event.getFactionRaiding(), event.getFactionRaided());
                 return;
             }
@@ -50,21 +62,24 @@ public class RaidEventListener implements Listener {
             long graceEndTimestamp = System.currentTimeMillis() + graceValueMillis;
 
             // Set Grace to stop stat padding (Adding to stats while in grace)
-            raidObject.setPurgeTime(graceEndTimestamp);
+            vulcanRaidStats.setPurgeTime(graceEndTimestamp);
 
             // Schedule the task to remove the raid entirely when grace is over
             long graceEndDelayTicks = (graceValueMillis / 50L); // Convert milliseconds to ticks (1 tick = 50ms)
 
             Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
-                callRaidEvent(raidObject);
+                callRaidEvent(vulcanRaidStats);
                 statsManager.removeRaid(event.getFactionRaiding(), event.getFactionRaided());
             }, graceEndDelayTicks);
 
         }, 5L); // 5 ticks delay
     }
 
-    private void callRaidEvent(RaidObject raidObject) {
-        RaidStatsEndEvent event = new RaidStatsEndEvent(raidObject);
+    /**
+     * Fires a custom RaidStatsEndEvent for other plugins to hook into.
+     */
+    private void callRaidEvent(VulcanRaidStats vulcanRaidStats) {
+        RaidStatsEndEvent event = new RaidStatsEndEvent(vulcanRaidStats);
         Bukkit.getPluginManager().callEvent(event);
     }
 }
