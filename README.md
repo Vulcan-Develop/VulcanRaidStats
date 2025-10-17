@@ -79,11 +79,7 @@ public void onRaidEnd(RaidStatsEndEvent event) {
 
 ## Installation
 
-1. Download the latest release
-2. Place `VulcanRaidStats.jar` in your `plugins` folder
-3. Ensure FactionsKore and dependencies are installed
-4. Start/restart your server
-5. Configure `config.yml` to your preferences
+This plugin is free through the Vulcan Loader found in the client panel [Here](https://vulcandev.net/).
 
 ## How It Works
 
