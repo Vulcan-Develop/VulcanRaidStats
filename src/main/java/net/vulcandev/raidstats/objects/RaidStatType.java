@@ -26,13 +26,13 @@ public enum RaidStatType {
     DAMAGE_TAKEN {
         @Override
         public int getValue(PlayerStats stats) {
-            return (int) stats.getDamageTaken();
+            return stats.getDamageTaken();
         }
     },
     DAMAGE_GIVEN {
         @Override
         public int getValue(PlayerStats stats) {
-            return (int) stats.getDamageDealt();
+            return stats.getDamageDealt();
         }
     },
     HITS_DEALT {
