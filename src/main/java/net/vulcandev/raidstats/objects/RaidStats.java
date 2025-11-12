@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
  * Represents a single raid with all associated statistics for both factions.
  * Tracks player stats, manages grace periods, and provides stat aggregation methods.
  */
-public class VulcanRaidStats {
+public class RaidStats {
     @Getter
     private final UUID id;
     @Getter
@@ -27,7 +27,7 @@ public class VulcanRaidStats {
     @Setter
     private long purgeTime = -1L;
 
-    public VulcanRaidStats(String raidingFaction, String defendingFaction, Raid koreRaid) {
+    public RaidStats(String raidingFaction, String defendingFaction, Raid koreRaid) {
         this.id = UUID.randomUUID();
         this.koreRaid = koreRaid;
         this.raidingFaction = raidingFaction;

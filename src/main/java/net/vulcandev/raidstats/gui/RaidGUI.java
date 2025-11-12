@@ -3,7 +3,7 @@ package net.vulcandev.raidstats.gui;
 import com.massivecraft.factions.Factions;
 import me.plugin.libs.YamlDocument;
 import net.vulcandev.raidstats.objects.PlayerStats;
-import net.vulcandev.raidstats.objects.VulcanRaidStats;
+import net.vulcandev.raidstats.objects.RaidStats;
 import net.vulcandev.raidstats.objects.RaidStatType;
 import net.xantharddev.vulcanlib.libs.Colour;
 import net.xantharddev.vulcanlib.libs.GUI;
@@ -27,24 +27,24 @@ public class RaidGUI extends GUI<Integer> {
     private static final int HEARTS_DIVISOR = 2;
 
     private final net.vulcandev.raidstats.VulcanRaidStats plugin;
-    private final VulcanRaidStats vulcanRaidStats;
+    private final RaidStats raidStats;
     private final String title;
     private final int size;
     private final int closeSlot;
     private final SimpleItem closeItem;
     private final SimpleItem fillerItem;
 
-    public RaidGUI(net.vulcandev.raidstats.VulcanRaidStats plugin, VulcanRaidStats raid, Player user) {
+    public RaidGUI(net.vulcandev.raidstats.VulcanRaidStats plugin, RaidStats raid, Player user) {
         super(user, plugin.conf().getInt("gui.size", 3));
         this.plugin = plugin;
-        this.vulcanRaidStats = raid;
+        this.raidStats = raid;
 
         YamlDocument config = plugin.conf();
 
         // GUI Title
         this.title = Colour.colour(config.getString("gui.title", "&7{faction_name}'s Raid Stats")
-                .replace("{raiding_name}", Factions.getInstance().getFactionById(vulcanRaidStats.getRaidingFaction()).getTag())
-                .replace("{defending_name}", Factions.getInstance().getFactionById(vulcanRaidStats.getDefendingFaction()).getTag())
+                .replace("{raiding_name}", Factions.getInstance().getFactionById(raidStats.getRaidingFaction()).getTag())
+                .replace("{defending_name}", Factions.getInstance().getFactionById(raidStats.getDefendingFaction()).getTag())
         );
 
         // Close Button Configuration
@@ -155,10 +155,10 @@ public class RaidGUI extends GUI<Integer> {
         List<String> updatedLore = new ArrayList<>();
         String rankFormat = conf.getString("gui.stats." + statType.name().toLowerCase() + ".rank");
 
-        Map<UUID, PlayerStats> defendingTopStats = vulcanRaidStats.getTopStats(
-            vulcanRaidStats.getDefendingFaction(), statType, TOP_PLAYERS_LIMIT);
+        Map<UUID, PlayerStats> defendingTopStats = raidStats.getTopStats(
+            raidStats.getDefendingFaction(), statType, TOP_PLAYERS_LIMIT);
         Map<UUID, PlayerStats> raidingTopStats = statType != RaidStatType.BLOCKS_PLACED
-            ? vulcanRaidStats.getTopStats(vulcanRaidStats.getRaidingFaction(), statType, TOP_PLAYERS_LIMIT)
+            ? raidStats.getTopStats(raidStats.getRaidingFaction(), statType, TOP_PLAYERS_LIMIT)
             : Collections.emptyMap();
 
         String raidColor = conf.getString("gui.raidColour", "&c");
@@ -182,8 +182,8 @@ public class RaidGUI extends GUI<Integer> {
      * Handles both defending and attacking faction stats including kills, deaths, damage, and blocks.
      */
     public List<String> replaceOverallPlaceholders(List<String> configLines) {
-        Map<RaidStatType, Integer> defendingTotals = vulcanRaidStats.getFactionTotals(vulcanRaidStats.getDefendingFaction());
-        Map<RaidStatType, Integer> raidingTotals = vulcanRaidStats.getFactionTotals(vulcanRaidStats.getRaidingFaction());
+        Map<RaidStatType, Integer> defendingTotals = raidStats.getFactionTotals(raidStats.getDefendingFaction());
+        Map<RaidStatType, Integer> raidingTotals = raidStats.getFactionTotals(raidStats.getRaidingFaction());
 
         List<String> updatedLines = new ArrayList<>();
         for (String line : configLines) {

@@ -2,7 +2,7 @@ package net.vulcandev.raidstats.command;
 
 import net.vulcandev.raidstats.gui.RaidGUI;
 import net.vulcandev.raidstats.manager.StatsManager;
-import net.vulcandev.raidstats.objects.VulcanRaidStats;
+import net.vulcandev.raidstats.objects.RaidStats;
 import net.xantharddev.vulcanlib.command.VulcanCommand;
 import net.xantharddev.vulcanlib.command.args.ArgumentType;
 import net.xantharddev.vulcanlib.command.args.CommandArgument;
@@ -52,7 +52,7 @@ public class ViewRaidCommand {
 
                     try {
                         UUID raidUUID = UUID.fromString(uuidString);
-                        VulcanRaidStats raid = statsManager.getRaidByUUID(raidUUID);
+                        RaidStats raid = statsManager.getRaidByUUID(raidUUID);
 
                         if (raid == null) {
                             player.sendMessage("§cRaid not found for the given UUID.");

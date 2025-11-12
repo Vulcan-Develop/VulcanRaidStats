@@ -7,7 +7,7 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.vulcandev.raidstats.manager.StatsManager;
-import net.vulcandev.raidstats.objects.VulcanRaidStats;
+import net.vulcandev.raidstats.objects.RaidStats;
 import net.xantharddev.vulcanlib.libs.Colour;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -91,7 +91,7 @@ public class CommandListener implements Listener {
     private void displayActiveRaids(Player player) {
         sendMessage(player, "messages.active-raids-header");
 
-        List<VulcanRaidStats> allRaids = statsManager.getAllRaids();
+        List<RaidStats> allRaids = statsManager.getAllRaids();
 
         if (allRaids.isEmpty()) {
             sendMessage(player, "messages.no-active-raids");
@@ -101,7 +101,7 @@ public class CommandListener implements Listener {
         int number = 1;
         boolean activeRaids = false;
 
-        for (VulcanRaidStats raid : allRaids) {
+        for (RaidStats raid : allRaids) {
             if (raid.isGrace()) continue;
 
             if (!raid.getKoreRaid().isDiscovered()) {
@@ -151,7 +151,7 @@ public class CommandListener implements Listener {
             String raidingFactionId = graceDetails.getA();
             int graceTimeLeft = graceDetails.getB();
 
-            VulcanRaidStats raid = statsManager.getRaidDefendingByFacID(defendingFactionId);
+            RaidStats raid = statsManager.getRaidDefendingByFacID(defendingFactionId);
             if (raid == null) continue;
 
             String raidingFaction = getFactionTag(raidingFactionId);

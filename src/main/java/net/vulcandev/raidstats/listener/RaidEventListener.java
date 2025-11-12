@@ -4,7 +4,7 @@ import com.golfing8.kore.event.RaidEndEvent;
 import com.golfing8.kore.event.RaidStartEvent;
 import net.vulcandev.raidstats.event.RaidStatsEndEvent;
 import net.vulcandev.raidstats.manager.StatsManager;
-import net.vulcandev.raidstats.objects.VulcanRaidStats;
+import net.vulcandev.raidstats.objects.RaidStats;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -34,7 +34,7 @@ public class RaidEventListener implements Listener {
             String defendingFactionId = event.getFactionRaided();
 
             // Initialize stats for both factions asynchronously
-            statsManager.addRaid(new VulcanRaidStats(raidingFactionId, defendingFactionId, event.getRaid()));
+            statsManager.addRaid(new RaidStats(raidingFactionId, defendingFactionId, event.getRaid()));
         });
     }
 
@@ -48,9 +48,9 @@ public class RaidEventListener implements Listener {
         Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
             int graceMinutes = plugin.getRaidTimer().getGrace(event.getFactionRaided());
 
-            VulcanRaidStats vulcanRaidStats = statsManager.getRaidDefendingByFacID(event.getFactionRaided());
+            RaidStats raidStats = statsManager.getRaidDefendingByFacID(event.getFactionRaided());
             if (graceMinutes <= 0) {
-                callRaidEvent(vulcanRaidStats);
+                callRaidEvent(raidStats);
                 statsManager.removeRaid(event.getFactionRaiding(), event.getFactionRaided());
                 return;
             }
@@ -62,13 +62,13 @@ public class RaidEventListener implements Listener {
             long graceEndTimestamp = System.currentTimeMillis() + graceValueMillis;
 
             // Set Grace to stop stat padding (Adding to stats while in grace)
-            vulcanRaidStats.setPurgeTime(graceEndTimestamp);
+            raidStats.setPurgeTime(graceEndTimestamp);
 
             // Schedule the task to remove the raid entirely when grace is over
             long graceEndDelayTicks = (graceValueMillis / 50L); // Convert milliseconds to ticks (1 tick = 50ms)
 
             Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
-                callRaidEvent(vulcanRaidStats);
+                callRaidEvent(raidStats);
                 statsManager.removeRaid(event.getFactionRaiding(), event.getFactionRaided());
             }, graceEndDelayTicks);
 
@@ -78,8 +78,8 @@ public class RaidEventListener implements Listener {
     /**
      * Fires a custom RaidStatsEndEvent for other plugins to hook into.
      */
-    private void callRaidEvent(VulcanRaidStats vulcanRaidStats) {
-        RaidStatsEndEvent event = new RaidStatsEndEvent(vulcanRaidStats);
+    private void callRaidEvent(RaidStats raidStats) {
+        RaidStatsEndEvent event = new RaidStatsEndEvent(raidStats);
         Bukkit.getPluginManager().callEvent(event);
     }
 }

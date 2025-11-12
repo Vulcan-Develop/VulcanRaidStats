@@ -18,7 +18,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * Main plugin class for VulcanRaidStats.
+ * Main plugin class for RaidStats.
  * Tracks detailed statistics during faction raids including kills, deaths, damage, and blocks placed.
  * Integrates with FactionsKore to monitor active raids and grace periods.
  */
@@ -70,7 +70,7 @@ public final class VulcanRaidStats extends JavaPlugin {
             raidTimer = new FactionsKoreRaidTimer(outpost);
             dataManager = new DataManager(getDataFolder(), statsManager, this);
             dataManager.loadAllRaids();
-        }, 20L);
+        }, 40L);
     }
 
     /**

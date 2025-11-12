@@ -2,7 +2,7 @@ package net.vulcandev.raidstats.data;
 
 import com.google.gson.reflect.TypeToken;
 import net.vulcandev.raidstats.manager.StatsManager;
-import net.vulcandev.raidstats.objects.VulcanRaidStats;
+import net.vulcandev.raidstats.objects.RaidStats;
 import net.xantharddev.vulcanlib.libs.DataUtils;
 import org.bukkit.Bukkit;
 
@@ -52,24 +52,24 @@ public class DataManager {
      */
     public void loadAllRaids() {
         // Load all raids from the single JSON file
-        Type type = new TypeToken<List<VulcanRaidStats>>() {}.getType();
-        List<VulcanRaidStats> raidsList = DataUtils.loadFromJson(raidsFile, type, ArrayList::new);
+        Type type = new TypeToken<List<RaidStats>>() {}.getType();
+        List<RaidStats> raidsList = DataUtils.loadFromJson(raidsFile, type, ArrayList::new);
 
         if (raidsList != null && !raidsList.isEmpty()) {
-            for (VulcanRaidStats vulcanRaidStats : raidsList) {
-                String raidingFaction = vulcanRaidStats.getRaidingFaction();
-                String defendingFaction = vulcanRaidStats.getDefendingFaction();
+            for (RaidStats raidStats : raidsList) {
+                String raidingFaction = raidStats.getRaidingFaction();
+                String defendingFaction = raidStats.getDefendingFaction();
 
                 // Try to attach to active raid
                 plugin.getRaidTimer().getActiveRaids().stream()
                         .filter(raid -> raid.getRaided().equals(defendingFaction) && raid.getFaction().equals(raidingFaction))
                         .findAny()
-                        .ifPresent(vulcanRaidStats::setKoreRaid);
+                        .ifPresent(raidStats::setKoreRaid);
 
                 // If in grace period and has a valid purgeTime, schedule the purge task
-                if (vulcanRaidStats.isGrace()) {
+                if (raidStats.isGrace()) {
                     long currentTime = System.currentTimeMillis();
-                    long purgeTime = vulcanRaidStats.getPurgeTime();
+                    long purgeTime = raidStats.getPurgeTime();
 
                     if (purgeTime > currentTime) {
                         long delayMillis = purgeTime - currentTime;
@@ -82,7 +82,7 @@ public class DataManager {
                     }
                 }
 
-                statsManager.addRaid(vulcanRaidStats);
+                statsManager.addRaid(raidStats);
             }
         }
     }

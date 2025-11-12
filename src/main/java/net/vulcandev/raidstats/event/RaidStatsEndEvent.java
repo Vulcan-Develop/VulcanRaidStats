@@ -1,6 +1,6 @@
 package net.vulcandev.raidstats.event;
 
-import net.vulcandev.raidstats.objects.VulcanRaidStats;
+import net.vulcandev.raidstats.objects.RaidStats;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -11,10 +11,10 @@ import org.bukkit.event.HandlerList;
 public class RaidStatsEndEvent extends Event {
     private static final HandlerList HANDLERS = new HandlerList();
 
-    private final VulcanRaidStats vulcanRaidStats;
+    private final RaidStats raidStats;
 
-    public RaidStatsEndEvent(VulcanRaidStats vulcanRaidStats) {
-        this.vulcanRaidStats = vulcanRaidStats;
+    public RaidStatsEndEvent(RaidStats raidStats) {
+        this.raidStats = raidStats;
     }
 
     /**
@@ -22,7 +22,7 @@ public class RaidStatsEndEvent extends Event {
      *
      * @return The completed raid object
      */
-    public VulcanRaidStats getRaidObject() { return vulcanRaidStats; }
+    public RaidStats getRaidObject() { return raidStats; }
 
     @Override
     public HandlerList getHandlers() {
