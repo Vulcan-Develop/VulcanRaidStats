@@ -12,17 +12,17 @@ import net.vulcandev.raidstats.listener.CommandListener;
 import net.vulcandev.raidstats.listener.RaidEventListener;
 import net.vulcandev.raidstats.listener.StatsListener;
 import net.vulcandev.raidstats.manager.StatsManager;
+import net.vulcandev.vulcanloader.loader.VulcanPlugin;
 import net.xantharddev.vulcanlib.ConfigFile;
 import net.xantharddev.vulcanlib.Logger;
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Main plugin class for RaidStats.
  * Tracks detailed statistics during faction raids including kills, deaths, damage, and blocks placed.
  * Integrates with FactionsKore to monitor active raids and grace periods.
  */
-public final class VulcanRaidStats extends JavaPlugin {
+public final class VulcanRaidStats extends VulcanPlugin {
     // Handles saving and loading of raid data to disk
     private DataManager dataManager;
 
@@ -44,7 +44,7 @@ public final class VulcanRaidStats extends JavaPlugin {
      * Initializes config, registers event listeners, and sets up the raid tracking system.
      */
     @Override
-    public void onEnable() {
+    public void onSecureEnable() {
         conf = ConfigFile.createConfig(this, "config.yml");
         StatsManager statsManager = new StatsManager(this);
         Bukkit.getPluginManager().registerEvents(new StatsListener(this, statsManager), this);
@@ -78,7 +78,7 @@ public final class VulcanRaidStats extends JavaPlugin {
      * Saves all active raid data to prevent data loss.
      */
     @Override
-    public void onDisable() {
+    public void onSecureDisable() {
         dataManager.saveAllRaids();
     }
 }
