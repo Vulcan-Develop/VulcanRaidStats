@@ -3,6 +3,7 @@ package net.vulcandev.raidstats.manager;
 import com.massivecraft.factions.Board;
 import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.Faction;
+import net.vulcandev.raidstats.VulcanRaidStats;
 import net.vulcandev.raidstats.objects.RaidStats;
 import org.bukkit.Location;
 
@@ -17,12 +18,11 @@ import java.util.stream.Collectors;
  * Handles raid creation, lookup, removal, and synchronization with FactionsKore.
  */
 public class StatsManager {
-    private final net.vulcandev.raidstats.VulcanRaidStats plugin;
-    private final List<RaidStats> raids;
+    private final VulcanRaidStats plugin;
+    private final List<RaidStats> raids = new ArrayList<>();
 
-    public StatsManager(net.vulcandev.raidstats.VulcanRaidStats plugin) {
+    public StatsManager(VulcanRaidStats plugin) {
         this.plugin = plugin;
-        this.raids = new ArrayList<>();
         syncRaids();
     }
 
